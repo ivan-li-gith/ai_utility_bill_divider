@@ -15,10 +15,11 @@ Access the application here: [Split Em](https://split-em.com)
 * **Secure Authentication**: Integrated with Supabase Auth for secure email/password and Google OAuth 2.0 sign-in
 
 
-## 🚧 Project Status: Roadmap
+## 🚧 Project Roadmap
 I am currently expanding **Split Em** from a utility-only tool to a general expense sharing platform:
 * **Receipt Line-Item OCR**: Moving beyond bill totals to parse individual items from restaurant receipts using GPT-4o
-* **Integrated "Nudges"**: Implementing deep-link shortcuts for Zelle and Venmo to allow one-tap payment requests
+* **Item-Level Assignment**: A new UI component to drag-and-drop specific receipt items to specific roommates
+* **Integrated Nudges**: Exploring shortcuts for PayPal and Venmo to allow one-tap payment requests/ reminders
 
 
 ## 🛠️ Technical Stack
@@ -30,7 +31,6 @@ I am currently expanding **Split Em** from a utility-only tool to a general expe
 * **Infrastructure & Security**:
     * **AWS EC2**: Containerized deployment via Docker and Docker Compose
     * **AWS CloudFront & Route 53**: Handles secure connections and domain name routing
-
 
 
 ## 📦 Local Development
