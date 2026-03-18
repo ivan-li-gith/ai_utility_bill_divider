@@ -1,0 +1,87 @@
+{% extends "navbar_base.html" %}
+{% block title %}History{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-between align-center mb-4">
+    <h2 style="margin: 0;">Billing History</h2>
+    {% if month_displays %}
+    <form action="{{ url_for('history.clear_history') }}" method="POST" 
+          onsubmit="return confirm('Permanently delete all data?');">
+        <button type="submit" class="btn btn-outline" style="color: #dc3545; border-color: #dc3545;">Clear All Data</button>
+    </form>
+    {% endif %}
+</div>
+
+{% if not month_displays %}
+    <div class="alert alert-info">No history found. Go to Upload Bills to start.</div>
+{% else %}
+    {% for display in month_displays %}
+    <div class="card mb-4">
+        <div class="card-header" style="background-color: #212529; color: white;">
+            {{ display.month }}
+        </div>
+        <div class="card-body">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Period</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for _, row in display.df.iterrows() %}
+                    <tr>
+                        <td>{{ row['Service Name'] }}</td>
+                        <td>{{ row['Service Period'] }}</td>
+                        <td>${{ "%.2f"|format(row['Total Amount Due']) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="grid-2 mb-4">
+                <div class="text-center" style="border: 1px solid #eee; padding: 1rem; border-radius: 8px;">
+                    <small style="color: #666;">TOTAL FOR MONTH</small><br>
+                    <strong>${{ "%.2f"|format(display.monthly_total) }}</strong>
+                </div>
+                <div class="text-center" style="border: 1px solid #eee; padding: 1rem; border-radius: 8px;">
+                    <small style="color: #666;">SPLIT PER PERSON</small><br>
+                    <strong>${{ "%.2f"|format(display.monthly_split) }}</strong>
+                </div>
+            </div>
+
+            <form action="{{ url_for('history.update_payment') }}" method="POST">
+                <input type="hidden" name="month" value="{{ display.month }}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Roommate</th>
+                            <th>Current Split</th>
+                            <th>Total Owed</th>
+                            <th>Paid?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for _, row in display.roommates.iterrows() %}
+                        <tr>
+                            <td>{{ row['Roommate Name'] }}</td>
+                            <td>${{ "%.2f"|format(row['Current Month Split']) }}</td>
+                            <td><strong>${{ "%.2f"|format(row['Total Owed']) }}</strong></td>
+                            <td>
+                                <input type="hidden" name="split_{{ display.month }}_{{ row['Roommate Name'] }}" value="{{ row['Current Month Split'] }}">
+                                <input type="hidden" name="rollover_{{ display.month }}_{{ row['Roommate Name'] }}" value="{{ row['Rollover Amount'] }}">
+                                <input type="hidden" name="total_{{ display.month }}_{{ row['Roommate Name'] }}" value="{{ row['Total Owed'] }}">
+                                <input type="checkbox" name="paid_{{ display.month }}_{{ row['Roommate Name'] }}" {% if row['Paid'] %}checked{% endif %}>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-pink">Update Payments</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+{% endblock %}

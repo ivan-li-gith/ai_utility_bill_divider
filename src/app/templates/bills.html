@@ -1,0 +1,56 @@
+{% extends "navbar_base.html" %}
+{% block title %}Bills{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <div class="card mb-4">
+        <div class="card-header" style="background-color: #198754; color: white; text-align: center;">
+            Upload Utility Bills
+        </div>
+        <div class="card-body">
+            <p class="text-center" style="color: #666; font-size: 0.9rem;">Select PDF statements to parse with AI.</p>
+            <form action="{{ url_for('bills.upload_bills') }}" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <input type="file" name="bills" multiple accept=".pdf" required>
+                </div>
+                <button type="submit" class="btn btn-pink" style="background-color: #198754;">Process Bills</button>
+            </form>
+        </div>
+    </div>
+
+    {% if session.staged_bills %}
+    <div class="card">
+        <div class="card-header d-flex justify-between align-center">
+            Review and Correct Bills
+            <span class="badge">{{ session.staged_bills|length }} Staged</span>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('bills.confirm_bills') }}" method="POST">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Service</th>
+                            <th>Month</th>
+                            <th>Period</th>
+                            <th>Amount ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bill in session.staged_bills %}
+                        <tr>
+                            <td><input type="text" name="service_{{ loop.index0 }}" value="{{ bill['Service Name'] }}"></td>
+                            <td><input type="text" name="month_{{ loop.index0 }}" value="{{ bill['Billing Month'] }}"></td>
+                            <td><input type="text" name="period_{{ loop.index0 }}" value="{{ bill['Service Period'] }}"></td>
+                            <td><input type="number" step="0.01" name="amount_{{ loop.index0 }}" value="{{ bill['Total Amount Due'] }}"></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <input type="hidden" name="bill_count" value="{{ session.staged_bills|length }}">
+                <button type="submit" class="btn btn-pink">Confirm & Save to Database</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

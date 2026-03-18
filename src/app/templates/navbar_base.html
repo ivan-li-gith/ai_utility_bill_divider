@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}{% endblock %} | Split Em</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <a class="navbar-brand" href="/">Split Em 💸</a>
+        <div class="nav-links">
+            <a href="{{ url_for('home.index') }}">Home</a>
+            <a href="{{ url_for('bills.index') }}">Upload Bills</a>
+            <a href="{{ url_for('roommates.index') }}">Roommates</a>
+            <a href="{{ url_for('history.index') }}">History</a>
+        </div>
+        <a class="btn btn-outline" href="{{ url_for('auth.logout') }}">Logout</a>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

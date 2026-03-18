@@ -1,0 +1,36 @@
+{% extends "navbar_base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="grid-3">
+    <div class="card kpi kpi-primary">
+        <div class="card-body">
+            <small>TOTAL OWED TO YOU</small>
+            <h2>${{ "%.2f"|format(stats.total_owed_to_you) }}</h2>
+        </div>
+    </div>
+    <div class="card kpi kpi-success">
+        <div class="card-body">
+            <small>TOTAL BILLS ({{ stats.current_month }})</small>
+            <h2>${{ "%.2f"|format(stats.monthly_expense) }}</h2>
+        </div>
+    </div>
+    <div class="card kpi kpi-info">
+        <div class="card-body">
+            <small>YOUR PERSONAL SHARE</small>
+            <h2>${{ "%.2f"|format(stats.your_share) }}</h2>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-top: 2rem;">
+    <div class="card">
+        <div class="card-header">Current Month Breakdown</div>
+        <div class="card-body">{{ donut_html|safe }}</div>
+    </div>
+    <div class="card">
+        <div class="card-header">Historical Trends</div>
+        <div class="card-body">{{ line_html|safe }}</div>
+    </div>
+</div>
+{% endblock %}

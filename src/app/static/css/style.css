@@ -1,0 +1,152 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    color: #333;
+}
+
+/* Navigation */
+.navbar {
+    background-color: #212529;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+.navbar-brand { font-size: 1.25rem; text-decoration: none; color: white; font-weight: bold; }
+.nav-links a { color: rgba(255,255,255,0.7); text-decoration: none; margin-right: 1.5rem; }
+.nav-links a:hover { color: white; }
+
+/* Layout Grid */
+.container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+/* Cards */
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    overflow: hidden;
+    height: 100%;
+}
+.card-header { padding: 1rem; font-weight: bold; border-bottom: 1px solid #eee; }
+.card-body { padding: 1.5rem; }
+
+/* KPI Cards Specifics */
+.kpi { border-left: 5px solid; }
+.kpi-primary { border-color: #0d6efd; color: #0d6efd; }
+.kpi-success { border-color: #198754; color: #198754; }
+.kpi-info    { border-color: #0dcaf0; color: #0dcaf0; }
+
+/* Buttons */
+.btn { border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
+.btn-pink { background-color: #eb4f7a; color: white; width: 100%; }
+.btn-pink:hover { background-color: #d13d64; }
+.btn-outline { border: 1px solid #ccc; background: transparent; color: #666; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+th { background-color: #f9f9f9; text-align: left; padding: 12px; border-bottom: 2px solid #eee; }
+td { padding: 12px; border-bottom: 1px solid #eee; }
+input[type="text"], input[type="number"] { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; }
+
+/* Utility Spacing & Alignment */
+.text-center { text-align: center; }
+.mb-4 { margin-bottom: 1.5rem; }
+.d-flex { display: flex; }
+.justify-between { justify-content: space-between; }
+.align-center { align-items: center; }
+
+/* Alerts */
+.alert { padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
+.alert-success { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
+.alert-danger { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
+.alert-info { background-color: #cff4fc; color: #055160; border: 1px solid #b6effb; }
+
+/* Form Layouts */
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+.form-group input { 
+    width: 100%; 
+    padding: 0.5rem; 
+    border: 1px solid #ddd; 
+    border-radius: 4px; 
+    box-sizing: border-box; /* Ensures padding doesn't break width */
+}
+
+/* Badge */
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    background: #f8f9fa;
+    color: #0d6efd;
+}
+
+/* --- Authentication Layout --- */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+}
+
+.auth-card {
+    max-width: 400px;
+    width: 100%;
+    background: white;
+    padding: 2.5rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.or-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    color: #888;
+    margin: 1.5rem 0;
+}
+
+.or-divider::before, .or-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #eee;
+}
+
+.or-divider:not(:empty)::before { margin-right: 10px; }
+.or-divider:not(:empty)::after { margin-left: 10px; }
+
+/* --- List Group --- */
+.list-group {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+    border: 1px solid #eee;
+    border-radius: 8px;
+}
+
+.list-item {
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+}
+
+.list-item:last-child { border-bottom: none; }
+
+/* --- Search/Input Group --- */
+.input-group {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.input-group input { flex: 1; }

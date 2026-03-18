@@ -1,0 +1,12 @@
+flask
+python-dotenv
+supabase
+gotrue
+pandas
+sqlalchemy
+openai
+pymupdf
+pymysql
+cryptography
+gunicorn
+plotly
