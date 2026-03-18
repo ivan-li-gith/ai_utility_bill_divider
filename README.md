@@ -1,31 +1,68 @@
-# AI Utility Bill Divider
+# AI Bill Divider (Split Em)
 
-An AI-powered web application designed to automate the process of parsing utility bills and calculating fair monthly splits among roommates.
+Split Em is an AI full-stack web application designed to automate the parsing of utility bills and calculate fair monthly expense splits among roommates. It leverages LLMs to eliminate manual data entry and provides a centralized dashboard for tracking household finances
 
 ## Live Demo
-Access the application here: [AI Utility Bill Divider](http://18.221.131.243/)
+Access the application here: [AI Utility Bill Divider](https://split-em.com)
 
-### Guest Access
-To explore the application without affecting personal production data, please use the following credentials:
-* **Username:** `guest`
-* **Password:** `guest`
-  
 ## Key Features
-* **AI Data Extraction**: Automatically parses PDF bills to find service dates and amounts due using the OpenAI API.
-* **Dynamic Roommate Management**: Add or remove roommates directly within the upload workflow to adjust splits.
-* **Automated Rollover Tracking**: Automatically carries over unpaid balances to the next month's total for each individual.
-* **Interactive History**: A dashboard to review past bills, track payment status, and visualize monthly spending trends.
+* **AI Data Extraction**: Automatically parses complex PDF utility statements to extract service periods and balances using the OpenAI GPT-4o API
+* **Dynamic Roommate Management**: Add or remove roommates directly within the upload workflow to adjust splits
+* **Automated Rollover Tracking**: Automatically carries over unpaid balances to the next month's total for each individual
+* **Visual Analytics**: Interactive dashboards that provides insights into monthly spending trends and service breakdowns
+* **Secure Authentication**: Integrated with Supabase Auth for secure email/password and Google OAuth 2.0 sign-in
 
 ## Technical Stack
-* **Frontend**: Streamlit
+* **Frontend**: Flask, HTML, CSS
+* **Backend**: Gunicorn
 * **AI Engine**: OpenAI GPT-4o
-* **Database**: MySQL hosted on AWS RDS
-* **Infrastructure**: Deployed on AWS EC2
-* **Libraries**: SQLAlchemy, Pandas, PyMuPDF (fitz), Python-Dotenv
+* **Authentication**: Supabase Auth (OAuth 2.0)
+* **Database**: MySQL hosted on AWS RDS using SQLAlchemy and Pandas
+* **Infrastructure & Security**:
+    * **AWS EC2**: Containerized deployment via Docker and Docker Compose
+    * **AWS CloudFront & Route 53**: Handles secure connections and domain name routing
 
-## How to Use
-1.  **Login**: Use the `guest` credentials provided above.
-2.  **Manage Roommates**: Open the "Manage Roommates" expander to add the people you are splitting with otherwise, it will just be yourself.
-3.  **Upload Bills**: Drag and drop your utility PDF statements into the uploader.
-4.  **Review**: Verify the AI-extracted data in the interactive data editor and click "Confirm & Save".
-5.  **Track Payments**: Switch to the "History & Payments" tab to mark bills as "Paid" and see how it affects next month's totals.
+---
+
+## 📦 Local Development
+
+1.  **Clone the repository**:
+    ```bash
+    git clone [https://github.com/ivan-li-gith/ai_bill_divider.git](https://github.com/ivan-li-gith/ai_bill_divider.git)
+    cd ai_bill_divider
+    ```
+
+2.  **Set up Virtual Environment**:
+    ```bash
+    python -m venv .venv
+    # Windows:
+    .venv\Scripts\activate
+    # Mac/Linux:
+    source .venv/bin/activate
+    ```
+
+3.  **Install dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Configure Environment Variables**:
+    Create a `.env` file in the root directory with the following keys:
+    * `OPENAI_API_KEY`
+    * `SUPABASE_URL` / `SUPABASE_KEY`
+    * `DB_HOST` / `DB_USER` / `DB_PASS` / `DB_NAME`
+    * `APP_SECRET_KEY`
+
+5.  **Run the application**:
+    ```bash
+    python run.py
+    ```
+
+---
+
+## 📖 How to Use
+1.  **Login**: Sign up for a new account via email/password or through Google
+2.  **Manage Roommates**: Navigate to the **Roommates** tab to add the people you are splitting with
+3.  **Upload Bills**: Drag and drop your utility PDF statements into the **Upload Bills** tab
+4.  **Review**: Verify the AI-extracted data in the staging area and click "Confirm & Save to Database". If unable to read files, manually enter details
+5.  **Track Payments**: Use the **History** tab to mark bills as "Paid" and see how it automatically affects the next month's rollover totals
