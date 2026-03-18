@@ -28,15 +28,20 @@ Access the application here: [AI Utility Bill Divider](https://split-em.com)
 
 1.  **Clone the repository**:
     ```bash
-    git clone [https://github.com/ivan-li-gith/ai_bill_divider.git](https://github.com/ivan-li-gith/ai_bill_divider.git)
+    git clone https://github.com/ivan-li-gith/ai_bill_divider.git
     cd ai_bill_divider
     ```
 
 2.  **Set up Virtual Environment**:
     ```bash
     python -m venv .venv
-    # Windows:
+
+    # Git Bash Windows:
+    source .venv/Scripts/activate
+
+    # PowerShell Windows:
     .venv\Scripts\activate
+    
     # Mac/Linux:
     source .venv/bin/activate
     ```
@@ -47,11 +52,12 @@ Access the application here: [AI Utility Bill Divider](https://split-em.com)
     ```
 
 4.  **Configure Environment Variables**:
-    Create a `.env` file in the root directory with the following keys:
-    * `OPENAI_API_KEY`
-    * `SUPABASE_URL` / `SUPABASE_KEY`
-    * `DB_HOST` / `DB_USER` / `DB_PASS` / `DB_NAME`
-    * `APP_SECRET_KEY`
+    Create a `.env` file in the root directory with the following keys. You can gather these keys from the following sources:
+    * `OPENAI_API_KEY`: [OpenAI API](https://openai.com/index/openai-api/)
+    * `SUPABASE_URL` & `SUPABASE_KEY`: [Supabase](https://supabase.com/)
+    * `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`: [AWS RDS Console](https://aws.amazon.com/)
+    * `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`: [Google Cloud Console](https://cloud.google.com/)
+    * `APP_SECRET_KEY`: Generate a random string (e.g., `python -c 'import os; print(os.urandom(24).hex())'`)
 
 5.  **Run the application**:
     ```bash
