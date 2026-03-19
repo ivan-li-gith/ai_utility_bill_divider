@@ -5,7 +5,7 @@ setup = Blueprint('setup', __name__)
 
 @setup.route('/setup')
 def index():
-    if "user_id" in session:
+    if "user_id" not in session:
         return redirect(url_for('auth.login'))
     return render_template('setup.html')
 

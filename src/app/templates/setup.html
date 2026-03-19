@@ -1,9 +1,13 @@
 {% extends "auth_base.html" %}
-{% block content %}
-<div class="auth-card" style="max-width: 600px;">
+
+{% block title %}Account Setup{% endblock %}
+
+{% block header %}WELCOME TO SPLIT EM! 💸{% endblock %}
+
+{% block form %}
+<div style="max-width: 600px; margin: 0 auto;">
     <form action="{{ url_for('setup.save') }}" method="POST">
         <div id="step-1">
-            <h2>Welcome to Split Em! 💸</h2>
             <p>Split Em parses your bills, saving you the headache of manual entry. Just upload your PDFs, and we'll handle the math for your roommates.</p>
             <button type="button" onclick="nextStep(2)" class="btn btn-pink">Got it! Let's Start</button>
         </div>
@@ -42,3 +46,9 @@ function nextStep(step) {
 }
 </script>
 {% endblock %}
+
+{# This hides the Google button and the "OR" divider on the setup page #}
+{% block social_login %}{% endblock %}
+
+{# Clears footer text for a cleaner onboarding look #}
+{% block footer_text %}{% endblock %}

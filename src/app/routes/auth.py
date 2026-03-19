@@ -69,14 +69,17 @@ def oauth_callback():
         try:
             response = supabase.auth.exchange_code_for_session({"auth_code": code})
             session["user_id"] = response.user.id
-            session["user_name"] = response.user.email
+            profile = get_profile(response.user.id) # Use your existing database helper
             
-            flash("Successfully authenticated with Google!", "success")
-            return redirect(url_for("setup.index"))
+            if not profile:
+                flash("Successfully authenticated! Please complete your profile.", "info")
+                return redirect(url_for("setup.index"))
+            
+            session["user_name"] = profile.get("display_name")
+            return redirect(url_for("home.index"))
         except Exception as e:
             flash(f"Authentication error: {e}", "danger")
             return redirect(url_for("auth.login"))
-        
     return "Missing authorization code", 400
 
 @auth.route('/logout')

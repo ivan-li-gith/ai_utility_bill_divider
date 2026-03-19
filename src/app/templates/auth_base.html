@@ -19,11 +19,13 @@
 
             {% block form %}{% endblock %}
 
+            {# This block is visible on Login/Signup, but we will hide it on Setup #}
+            {% block social_login %}
             <div class="or-divider">OR</div>
-            
             <a href="{{ url_for('auth.oauth_login', provider='google') }}" class="btn btn-outline" style="width: 100%;">
                 Continue with Google
             </a>
+            {% endblock %}
 
             <p class="text-center" style="margin-top: 2rem;">
                 {% block footer_text %}{% endblock %}

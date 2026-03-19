@@ -41,8 +41,11 @@ def init_db():
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS group_members (
                 group_id INT,
-                member_name VARCHAR(255),
-                PRIMARY KEY (group_id, member_name)
+                user_id VARCHAR(255),
+                role VARCHAR(50) DEFAULT 'member',
+                PRIMARY KEY (group_id, user_id),
+                FOREIGN KEY (group_id) REFERENCES group_list(group_id),
+                FOREIGN KEY (user_id) REFERENCES profiles(user_id)
             )
         """))
         
