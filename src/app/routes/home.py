@@ -3,7 +3,7 @@ import plotly.io as pio
 import pandas as pd
 from flask import Blueprint, render_template, session, redirect, url_for, request
 from src.app.database import get_user_groups, load_history, get_group_members
-from src.app.routes.history import calculate_monthly_data
+from src.app.routes.utilities import calculate_utilities, get_member_names
 
 home = Blueprint('home', __name__)
 
@@ -32,8 +32,9 @@ def home_page():
     line_html = ""  
     
     if not billing_history.empty and group_id:
-        names = get_group_members(group_id)
-        month_displays = calculate_monthly_data(user_id, billing_history, names, group_id)
+        members = get_group_members(group_id)
+        names = get_member_names(user_id, members)
+        month_displays = calculate_utilities(user_id, billing_history, names, group_id)
         
         if month_displays:
             current_month = month_displays[-1]

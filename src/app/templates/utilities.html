@@ -1,0 +1,213 @@
+{% extends "navbar_base.html" %}
+
+{% block content %}
+<div class="page-header d-flex justify-between align-center mb-4">
+    <h2>Utility History</h2>
+    
+    <div class="d-flex align-center" style="gap: 1.5rem;">
+        <form action="{{ url_for('utilities.index') }}" method="GET" class="d-flex align-center" style="gap: 0.5rem;">
+            <label style="font-weight: 600; white-space: nowrap; color: #666;">Filter by:</label>
+            <select name="group_id" onchange="this.form.submit()" style="padding: 8px; border-radius: 4px; min-width: 150px; border: 1px solid #ddd;">
+                <option value="" {% if not selected_group_id %}selected{% endif %}>-- Select a Group --</option>
+                {% for group in groups %}
+                <option value="{{ group.group_id }}" {% if group.group_id == selected_group_id %}selected{% endif %}>
+                    {{ group.group_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+
+        <button class="btn btn-pink" style="width: auto; padding: 0.6rem 1.5rem;" onclick="toggleUpload()">+ Upload Bills</button>
+    </div>
+</div>
+
+<div id="uploadSection" class="card mb-4" style="display: none; border-top: 4px solid #eb4f7a;">
+    <div class="card-header d-flex justify-between align-center">
+        <span>Upload Utility PDF Statements</span>
+        <button type="button" class="btn-text" onclick="toggleUpload()" style="color: #666; font-size: 1.2rem;">&times;</button>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('utilities.upload') }}" method="POST" enctype="multipart/form-data">
+            
+            <div class="form-group mb-3">
+                <label>Which group are these bills for?</label>
+                <select name="group_id" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" required>
+                    <option value="" disabled selected>-- Choose a group --</option>
+                    {% for group in groups %}
+                        <option value="{{ group.group_id }}">{{ group.group_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group mb-4">
+                <label>Select PDF Statements</label>
+                <input type="file" name="bills" multiple accept=".pdf" required 
+                       style="width: 100%; padding: 1.5rem; border: 2px dashed #ddd; border-radius: 8px; text-align: center; background: #fafafa;">
+            </div>
+            <button type="submit" class="btn btn-pink">Start AI Parsing</button>
+        </form>
+    </div>
+</div>
+
+{% if session.staged_bills %}
+<div class="card mb-5" style="border: 2px solid #eb4f7a; box-shadow: 0 4px 15px rgba(235, 79, 122, 0.1);">
+    <div class="card-header bg-dark text-white d-flex justify-between align-center">
+        Review Extracted Data
+        <span class="badge" style="background: #eb4f7a; color: white;">{{ session.staged_bills|length }} Staged</span>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('utilities.save') }}" method="POST">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Month</th>
+                        <th>Period</th>
+                        <th>Amount ($)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bill in session.staged_bills %}
+                    <tr>
+                        <td><input type="text" name="service_{{ loop.index0 }}" value="{{ bill['Service Name'] }}" required></td>
+                        <td><input type="text" name="month_{{ loop.index0 }}" value="{{ bill['Billing Month'] }}" required></td>
+                        <td><input type="text" name="period_{{ loop.index0 }}" value="{{ bill['Service Period'] }}"></td>
+                        <td><input type="number" step="0.01" name="amount_{{ loop.index0 }}" value="{{ bill['Total Amount Due'] }}" required></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <input type="hidden" name="bill_count" value="{{ session.staged_bills|length }}">
+            <button type="submit" class="btn btn-pink">Confirm & Save to History</button>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+{% if not selected_group_id %}
+    <div class="alert alert-info text-center">
+        Please select a group above to view your expense history. <br>
+        <small>Don't see any groups? <a href="{{ url_for('groups.group_page') }}">Create one here.</a></small>
+    </div>
+{% elif not month_displays %}
+    <div class="alert alert-warning text-center">
+        No bills found for this group. Click <strong>+ Upload Bills</strong> to get started!
+    </div>
+{% else %}
+    {% for display in month_displays %}
+    <div class="card mb-4" style="border: 1px solid #ddd; overflow: hidden;">
+        <div class="card-header d-flex justify-between align-center" 
+             onclick="toggleMonth(this)" 
+             style="background-color: #212529; color: white; cursor: pointer; user-select: none;">
+            <span>{{ display.month }}</span>
+            <span class="caret-icon" style="transition: transform 0.3s ease;">▼</span>
+        </div>
+
+        <div class="card-body month-content" style="display: {{ 'block' if loop.first else 'none' }}; border-top: 1px solid #eee;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Period</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for _, row in display.df.iterrows() %}
+                    <tr>
+                        <td>{{ row['Service Name'] }}</td>
+                        <td>{{ row['Service Period'] }}</td>
+                        <td>${{ "%.2f"|format(row['Total Amount Due']) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="grid-2 mb-4">
+                <div class="text-center" style="border: 1px solid #eee; padding: 1rem; border-radius: 8px;">
+                    <small style="color: #666;">TOTAL FOR MONTH</small><br>
+                    <strong>${{ "%.2f"|format(display.monthly_total) }}</strong>
+                </div>
+                <div class="text-center" style="border: 1px solid #eee; padding: 1rem; border-radius: 8px;">
+                    <small style="color: #666;">SPLIT PER PERSON</small><br>
+                    <strong>${{ "%.2f"|format(display.monthly_split) }}</strong>
+                </div>
+            </div>
+
+            <form action="{{ url_for('utilities.update_status') }}" method="POST">
+                <input type="hidden" name="group_id" value="{{ selected_group_id }}">
+                <input type="hidden" name="month" value="{{ display.month }}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Roommate</th>
+                            <th>Current Split</th>
+                            <th>Total Owed</th>
+                            <th>Paid?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for _, row in display.roommates.iterrows() %}
+                        <tr>
+                            <td>{{ row['Roommate Name'] }}</td>
+                            <td>${{ "%.2f"|format(row['Current Month Split']) }}</td>
+                            <td><strong>${{ "%.2f"|format(row['Total Owed']) }}</strong></td>
+                            <td>
+                                <input type="hidden" name="split_{{ display.month }}_{{ row['Roommate Name'] }}" value="{{ row['Current Month Split'] }}">
+                                <input type="hidden" name="rollover_{{ display.month }}_{{ row['Roommate Name'] }}" value="{{ row['Rollover Amount'] }}">
+                                <input type="hidden" name="total_{{ display.month }}_{{ row['Roommate Name'] }}" value="{{ row['Total Owed'] }}">
+                                <input type="checkbox" name="paid_{{ display.month }}_{{ row['Roommate Name'] }}" {% if row['Paid'] %}checked{% endif %} style="cursor: pointer; width: 18px; height: 18px;">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<script>
+function toggleMonth(header) {
+    const body = header.nextElementSibling;
+    const caret = header.querySelector('.caret-icon');
+    
+    if (body.style.display === "none") {
+        body.style.display = "block";
+        caret.style.transform = "rotate(180deg)";
+    } else {
+        body.style.display = "none";
+        caret.style.transform = "rotate(0deg)";
+    }
+}
+
+// Ensure carets match the default open/closed state on page load
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.card-header').forEach(header => {
+        const body = header.nextElementSibling;
+        const caret = header.querySelector('.caret-icon');
+        if (body.style.display === "block") {
+            caret.style.transform = "rotate(180deg)";
+        }
+    });
+});
+
+function toggleUpload() {
+    const section = document.getElementById('uploadSection');
+    section.style.display = (section.style.display === 'none') ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Select all checkboxes that start with "paid_"
+    const paymentCheckboxes = document.querySelectorAll('input[type="checkbox"][name^="paid_"]');
+    
+    paymentCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Find the specific form this checkbox belongs to and submit it
+            this.closest('form').submit();
+        });
+    });
+});
+</script>
+{% endblock %}
