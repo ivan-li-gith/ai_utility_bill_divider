@@ -1,18 +1,12 @@
 import pandas as pd
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
 from src.app.core.parser import extract_from_pdf, get_bill_details
-from app.database.database import *
-from src.app.database.group_table import *
-from src.app.database.member_table import *
-from src.app.database.profile_table import *
-from src.app.database.bill_table import *
-from src.app.database.payment_table import *
-
+from src.app.database import get_user_groups, save_bill_history
 
 bills = Blueprint('bills', __name__)
 
 @bills.route('/bills', methods=['GET', 'POST'])
-def index():
+def bills_page():
     if "user_id" not in session:
         return redirect(url_for('auth.login'))
     
@@ -37,7 +31,7 @@ def upload_bills():
 
     session['staged_bills'] = all_bill_data
     session['staged_group_id'] = group_id
-    return redirect(url_for('bills.index'))
+    return redirect(url_for('bills.bills_page'))
 
 @bills.route('/confirm_bills', methods=['POST'])
 def confirm_bills():
@@ -55,7 +49,7 @@ def confirm_bills():
         # reject save if fields are still unknown
         if month in ["Unknown", "Error", ""]:
             flash(f"Row {i+1} has an invalid month. Please correct it before saving.", "danger")
-            return redirect(url_for('bills.index'))
+            return redirect(url_for('bills.bills_page'))
         
         bill = {
             "Billing Month": request.form.get(f"month_{i}"),
@@ -72,6 +66,6 @@ def confirm_bills():
         session.pop('staged_bills', None)   # clear session once saved
         session.pop('staged_group_id', None)
         flash("Bills successfully saved to database!", "success")
-        return redirect(url_for('history.index'))
+        return redirect(url_for('history.history_page'))
     
-    return redirect(url_for('bills.index'))
+    return redirect(url_for('bills.bills_page'))

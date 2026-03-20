@@ -1,19 +1,13 @@
 import pandas as pd
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
-from src.app.core.database import *
-from src.app.tables.group_table import *
-from src.app.tables.member_table import *
-from src.app.tables.profile_table import *
-from src.app.tables.bill_table import *
-from src.app.tables.payment_table import *
-
+from src.app.database import get_user_groups, load_history, get_group_members, save_tracker, get_paid_status, clear_db
 
 history = Blueprint('history', __name__)
 
 @history.route('/history')
-def index():
+def history_page():
     if "user_id" not in session:
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login')) # Fixed blueprint prefix
     
     user_id = session['user_id']
     user_groups = get_user_groups(user_id)
@@ -26,7 +20,7 @@ def index():
     
     if not billing_history.empty and group_id:
         names = get_group_members(group_id)
-        month_displays = calculate_monthly_data(user_id, billing_history, names)
+        month_displays = calculate_monthly_data(user_id, billing_history, names, group_id)
         month_displays.reverse() 
     else:
         month_displays = []
@@ -58,7 +52,7 @@ def update_payment():
     save_tracker(user_id, df, month, group_id)
     
     flash(f"Updated payments for {month}", "success")
-    return redirect(url_for('history.index', group_id=group_id))
+    return redirect(url_for('history.history_page', group_id=group_id))
 
 @history.route('/clear_history', methods=['POST'])
 def clear_history():

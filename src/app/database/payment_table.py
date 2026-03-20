@@ -1,41 +1,37 @@
 import pandas as pd
 from sqlalchemy import text
-from app.database.database import *
-from src.app.database.group_table import *
-from src.app.database.member_table import *
-from src.app.database.profile_table import *
-from src.app.database.bill_table import *
-from src.app.database.payment_table import *
+from .database import get_engine
 
-def save_tracker(user_id, df, month):
+def save_tracker(user_id, df, month, group_id):
+    """Saves payment status for a specific group and month."""
     engine = get_engine()
     with engine.begin() as conn:
         conn.execute(text("""
             DELETE FROM payment_tracker 
-            WHERE `Billing Month` = :month AND user_id = :uid
-        """), {"month": month, "uid": user_id})
+            WHERE `Billing Month` = :month AND user_id = :uid AND group_id = :gid
+        """), {"month": month, "uid": user_id, "gid": group_id})
     
     df_to_save = df.copy()
     df_to_save["Billing Month"] = month
     df_to_save["user_id"] = user_id
+    df_to_save["group_id"] = group_id
     
-    cols = ["user_id", "Billing Month", "Roommate Name", "Current Month Split", "Rollover Amount", "Total Owed", "Paid"]
+    cols = ["user_id", "group_id", "Billing Month", "Roommate Name", "Current Month Split", "Rollover Amount", "Total Owed", "Paid"]
     df_to_save[cols].to_sql("payment_tracker", engine, if_exists="append", index=False)
     
-def get_paid_status(user_id, month):
+def get_paid_status(user_id, month, group_id):
+    """Fetches paid status for a specific group and month."""
     engine = get_engine()
     query = text("""
         SELECT `Roommate Name`, `Paid` 
         FROM payment_tracker 
-        WHERE `Billing Month` = :month AND user_id = :uid
+        WHERE `Billing Month` = :month AND user_id = :uid AND group_id = :gid
     """)
     
     try:
-        df = pd.read_sql(query, engine, params={"month": month, "uid": user_id})
+        df = pd.read_sql(query, engine, params={"month": month, "uid": user_id, "gid": group_id})
         if not df.empty:
             return df.set_index("Roommate Name")["Paid"].to_dict()
         return {}
     except Exception:
         return {}
-    
-

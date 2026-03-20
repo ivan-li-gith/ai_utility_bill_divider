@@ -1,15 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from app.database.database import *
-from src.app.database.group_table import *
-from src.app.database.member_table import *
-from src.app.database.profile_table import *
-from src.app.database.bill_table import *
-from src.app.database.payment_table import *
+from src.app.database import save_profile, create_group
 
 setup = Blueprint('setup', __name__)
 
 @setup.route('/setup')
-def index():
+def setup_page():
     if "user_id" not in session:
         return redirect(url_for('auth.login'))
     return render_template('setup.html')
@@ -33,8 +28,8 @@ def save():
         else:
             flash(f"Profile created! Welcome, {display_name}.", "success")
             
-        return redirect(url_for('home.index'))
+        return redirect(url_for('home.home_page'))
         
     except Exception as e:
         flash(f"An error occurred during setup: {e}", "danger")
-        return redirect(url_for('setup.index'))
+        return redirect(url_for('setup.setup_page'))

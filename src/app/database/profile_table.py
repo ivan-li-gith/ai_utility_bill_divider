@@ -1,10 +1,5 @@
 from sqlalchemy import text
-from app.database.database import *
-from src.app.database.group_table import *
-from src.app.database.member_table import *
-from src.app.database.profile_table import *
-from src.app.database.bill_table import *
-from src.app.database.payment_table import *
+from .database import get_engine
 
 def get_profile(user_id):
     engine = get_engine()

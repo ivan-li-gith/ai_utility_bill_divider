@@ -1,37 +1,30 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from src.app.core.supabase_client import supabase
-from app.database.database import *
-from src.app.database.group_table import *
-from src.app.database.member_table import *
-from src.app.database.profile_table import *
-from src.app.database.bill_table import *
-from src.app.database.payment_table import *
+from src.app.database import get_profile
 
 auth = Blueprint('auth', __name__)
 
 @auth.route('/')
 def index():
     if "user_id" in session:
-        return redirect(url_for('home.index'))
-    
-    return redirect(url_for('auth.login'))
+        return redirect(url_for('home.home_page'))
+    return redirect(url_for('auth.login_page'))
 
 @auth.route('/login', methods=['GET', 'POST'])
-def login():
+def login_page():
     if request.method == 'POST':
         email = request.form.get("email")
         password = request.form.get("password")
         
         try:
             response = supabase.auth.sign_in_with_password({"email": email, "password": password})
-            
             if response:
                 session["user_id"] = response.user.id
                 profile = get_profile(response.user.id)
                 
                 if not profile:
-                    return redirect(url_for("setup.index")) 
-                return redirect(url_for("home.index"))
+                    return redirect(url_for("setup.setup_page")) 
+                return redirect(url_for("home.home_page"))
         except Exception as e:
             flash(f"Login failed: {str(e)}", "danger")
             
@@ -46,7 +39,7 @@ def signup():
         try:
             response = supabase.auth.sign_up({"email": email, "password": password})
             flash("Check your email for a confirmation link!", "info")
-            return redirect(url_for("auth.login"))
+            return redirect(url_for("auth.login_page"))
         except Exception as e:
             flash(f"Signup failed: {str(e)}", "danger")
             
@@ -78,17 +71,17 @@ def oauth_callback():
             
             if not profile:
                 flash("Successfully authenticated! Please complete your profile.", "info")
-                return redirect(url_for("setup.index"))
+                return redirect(url_for("setup.setup_page"))
             
             session["user_name"] = profile.get("display_name")
-            return redirect(url_for("home.index"))
+            return redirect(url_for("home.home_page"))
         except Exception as e:
             flash(f"Authentication error: {e}", "danger")
-            return redirect(url_for("auth.login"))
+            return redirect(url_for("auth.login_page"))
     return "Missing authorization code", 400
 
 @auth.route('/logout')
 def logout():
     supabase.auth.sign_out()
     session.clear()
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('auth.login_page'))

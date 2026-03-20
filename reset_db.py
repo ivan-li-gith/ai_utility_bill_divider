@@ -1,5 +1,5 @@
 # reset_db.py
-from src.app.core.database import get_engine
+from app.database import get_engine
 from sqlalchemy import text
 
 engine = get_engine()

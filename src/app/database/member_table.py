@@ -1,10 +1,5 @@
 from sqlalchemy import text
-from app.database.database import *
-from src.app.database.group_table import *
-from src.app.database.member_table import *
-from src.app.database.profile_table import *
-from src.app.database.bill_table import *
-from src.app.database.payment_table import *
+from .database import get_engine
 
 def add_group_member(group_id, name, email):
     engine = get_engine()
@@ -43,3 +38,11 @@ def get_group_members(group_id):
     with engine.connect() as conn:
         result = conn.execute(query, {"gid": group_id}).fetchall()
         return [dict(row._asdict()) for row in result]
+
+def get_group_member_names(group_id):
+    """Returns a simple list of names for members in a group."""
+    engine = get_engine()
+    query = text("SELECT member_name FROM group_members WHERE group_id = :gid")
+    with engine.connect() as conn:
+        result = conn.execute(query, {"gid": group_id}).fetchall()
+        return [row[0] for row in result]

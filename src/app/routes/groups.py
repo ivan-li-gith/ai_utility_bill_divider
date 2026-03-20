@@ -1,11 +1,6 @@
 import json
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
-from app.database.database import *
-from src.app.database.group_table import *
-from src.app.database.member_table import *
-from src.app.database.profile_table import *
-from src.app.database.bill_table import *
-from src.app.database.payment_table import *
+from src.app.database import get_user_groups, create_group, add_group_member, get_group_members, get_user_by_email, delete_group, update_group_name, update_member, delete_member
 
 groups = Blueprint('groups', __name__)
 
