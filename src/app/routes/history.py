@@ -1,6 +1,12 @@
 import pandas as pd
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
 from src.app.core.database import *
+from src.app.tables.group_table import *
+from src.app.tables.member_table import *
+from src.app.tables.profile_table import *
+from src.app.tables.bill_table import *
+from src.app.tables.payment_table import *
+
 
 history = Blueprint('history', __name__)
 
@@ -10,7 +16,7 @@ def index():
         return redirect(url_for('login'))
     
     user_id = session['user_id']
-    user_groups = get_user_groups
+    user_groups = get_user_groups(user_id)
     group_id = request.args.get('group_id', type=int)
     
     if not group_id and user_groups:
@@ -71,11 +77,18 @@ def clear_history():
 
 def calculate_monthly_data(user_id, billing_history, names, group_id):
     # (Existing sorting logic remains the same)
-    unique_months = billing_history["Billing Month"].unique()
+    group_history = billing_history[billing_history["group_id"] == group_id]
+    unique_months = group_history["Billing Month"].unique()
     months_ascending = sorted(unique_months, key=lambda d: pd.to_datetime(d, format='%B %Y'))
     
-    # Filter 'Me' out if already in names, then add to the start
-    full_member_list = ["Me"] + [n for n in names if n != "Me"]
+    full_member_list = []
+    for m in names:
+        if str(m["user_id"]) == str(user_id):
+            full_member_list.append("Me")
+        else:
+            full_member_list.append(m["display_name"])
+    
+
     running_rollover = {name: 0.0 for name in full_member_list}
     month_displays = []
     

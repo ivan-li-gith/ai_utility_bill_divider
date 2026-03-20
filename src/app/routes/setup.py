@@ -1,5 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from src.app.core.database import save_profile, create_group
+from app.database.database import *
+from src.app.database.group_table import *
+from src.app.database.member_table import *
+from src.app.database.profile_table import *
+from src.app.database.bill_table import *
+from src.app.database.payment_table import *
 
 setup = Blueprint('setup', __name__)
 

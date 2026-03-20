@@ -1,6 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from src.app.core.supabase_client import supabase
-from src.app.core.database import get_profile
+from app.database.database import *
+from src.app.database.group_table import *
+from src.app.database.member_table import *
+from src.app.database.profile_table import *
+from src.app.database.bill_table import *
+from src.app.database.payment_table import *
 
 auth = Blueprint('auth', __name__)
 

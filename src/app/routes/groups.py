@@ -1,6 +1,11 @@
 import json
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
-from src.app.core.database import *
+from app.database.database import *
+from src.app.database.group_table import *
+from src.app.database.member_table import *
+from src.app.database.profile_table import *
+from src.app.database.bill_table import *
+from src.app.database.payment_table import *
 
 groups = Blueprint('groups', __name__)
 

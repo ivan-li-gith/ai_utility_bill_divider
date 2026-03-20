@@ -1,4 +1,11 @@
-        
+from sqlalchemy import text
+from app.database.database import *
+from src.app.database.group_table import *
+from src.app.database.member_table import *
+from src.app.database.profile_table import *
+from src.app.database.bill_table import *
+from src.app.database.payment_table import *
+
 def create_group(owner_id, group_name):
     engine = get_engine()
     with engine.begin() as conn:
@@ -25,7 +32,6 @@ def create_group(owner_id, group_name):
         
         return group_id
     
-# src/app/core/database.py
 
 def get_user_groups(user_id):
     """Fetches groups and includes a JSON string of member details."""
@@ -65,16 +71,3 @@ def update_group_name(group_id, new_name):
     with engine.begin() as conn:
         conn.execute(text("UPDATE group_list SET group_name = :name WHERE group_id = :gid"), 
                      {"name": new_name, "gid": group_id})
-
-def get_group_members(group_id):
-    """Fetches all profiles of users in a specific group."""
-    engine = get_engine()
-    query = text("""
-        SELECT p.user_id, p.display_name, p.email, gm.role
-        FROM profiles p
-        JOIN group_members gm ON p.user_id = gm.user_id
-        WHERE gm.group_id = :gid
-    """)
-    with engine.connect() as conn:
-        result = conn.execute(query, {"gid": group_id}).fetchall()
-        return [dict(row._asdict()) for row in result]

@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 from dotenv import load_dotenv
-from src.app.core.database import init_db
+from app.database.database import init_db
 from src.app.routes.auth import auth
 from src.app.routes.bills import bills
 from src.app.routes.groups import groups

@@ -1,7 +1,13 @@
 import pandas as pd
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
-from src.app.core.database import *
 from src.app.core.parser import extract_from_pdf, get_bill_details
+from app.database.database import *
+from src.app.database.group_table import *
+from src.app.database.member_table import *
+from src.app.database.profile_table import *
+from src.app.database.bill_table import *
+from src.app.database.payment_table import *
+
 
 bills = Blueprint('bills', __name__)
 
@@ -56,7 +62,7 @@ def confirm_bills():
             "Service Name": request.form.get(f"service_{i}"),
             "Service Period": request.form.get(f"period_{i}"),
             "Total Amount Due": float(request.form.get(f"amount_{i}", 0)),
-            "groud_id": group_id
+            "group_id": group_id
         }
         corrected_data.append(bill)
 
