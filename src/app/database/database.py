@@ -75,8 +75,8 @@ def init_db():
         )"""))
         
         conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS recurring_expenses (
-                recurring_id INT AUTO_INCREMENT PRIMARY KEY,
+            CREATE TABLE IF NOT EXISTS subscription_expenses (
+                subscription_id INT AUTO_INCREMENT PRIMARY KEY,
                 user_id VARCHAR(255),
                 group_id INT,
                 expense_name VARCHAR(255),

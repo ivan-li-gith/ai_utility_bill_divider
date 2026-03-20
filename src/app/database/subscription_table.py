@@ -1,23 +1,23 @@
 from sqlalchemy import text
 from .database import get_engine
 
-def add_recurring_expense(user_id, group_id, name, amount, day):
-    """Adds a new fixed recurring expense rule including the billing day."""
+def add_subscription(user_id, group_id, name, amount, day):
+    """Adds a new fixed subscription expense rule including the billing day."""
     engine = get_engine()
     with engine.begin() as conn:
         conn.execute(text("""
-            INSERT INTO recurring_expenses (user_id, group_id, expense_name, amount, billing_day)
+            INSERT INTO subscription_expenses (user_id, group_id, expense_name, amount, billing_day)
             VALUES (:uid, :gid, :name, :amount, :day)
         """), {"uid": user_id, "gid": group_id, "name": name, "amount": amount, "day": day})
 
-def get_recurring_expenses(user_id, group_id=None):
-    """Fetches recurring expenses. If group_id is 0 or None, fetches all for the user."""
+def get_subscription(user_id, group_id=None):
+    """Fetches subscription expenses. If group_id is 0 or None, fetches all for the user."""
     engine = get_engine()
     
     # JOIN with group_list to get the group_name for the "Charging: X" label
     query_str = """
-        SELECT re.recurring_id, re.group_id, re.expense_name, re.amount, re.billing_day, gl.group_name
-        FROM recurring_expenses re
+        SELECT re.subscription_id, re.group_id, re.expense_name, re.amount, re.billing_day, gl.group_name
+        FROM subscription_expenses re
         JOIN group_list gl ON re.group_id = gl.group_id
         WHERE re.user_id = :uid
     """
@@ -33,19 +33,19 @@ def get_recurring_expenses(user_id, group_id=None):
         result = conn.execute(query, params).fetchall()
         return [dict(row._asdict()) for row in result]
 
-def update_recurring_expense(recurring_id, name, amount, day):
-    """Updates an existing recurring expense including the billing day."""
+def update_subscription(subscription_id, name, amount, day):
+    """Updates an existing subscription expense including the billing day."""
     engine = get_engine()
     with engine.begin() as conn:
         conn.execute(text("""
-            UPDATE recurring_expenses 
+            UPDATE subscription_expenses 
             SET expense_name = :name, amount = :amount, billing_day = :day 
-            WHERE recurring_id = :rid
-        """), {"name": name, "amount": amount, "day": day, "rid": recurring_id})
+            WHERE subscription_id = :rid
+        """), {"name": name, "amount": amount, "day": day, "rid": subscription_id})
 
-def delete_recurring_expense(recurring_id):
-    """Permanently removes a recurring expense rule."""
+def delete_subscription(subscription_id):
+    """Permanently removes a subscription expense rule."""
     engine = get_engine()
     with engine.begin() as conn:
-        conn.execute(text("DELETE FROM recurring_expenses WHERE recurring_id = :rid"), 
-                     {"rid": recurring_id})
+        conn.execute(text("DELETE FROM subscription_expenses WHERE subscription_id = :rid"), 
+                     {"rid": subscription_id})

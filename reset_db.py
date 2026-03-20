@@ -16,7 +16,7 @@ with engine.begin() as conn:
         "group_list", 
         "roommates", 
         "profiles",
-        "recurring_expenses"
+        "subscription_expenses"
     ]
     
     for table in tables:

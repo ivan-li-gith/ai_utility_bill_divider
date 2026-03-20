@@ -171,7 +171,6 @@ input[type="text"], input[type="number"] { width: 100%; padding: 6px; border: 1p
     color: #888;
 }
 
-/* src/app/static/css/style.css */
 
 /* Vertical stacking */
 .vertical-stack {
@@ -179,23 +178,6 @@ input[type="text"], input[type="number"] { width: 100%; padding: 6px; border: 1p
     flex-direction: column;
     gap: 1rem;
 }
-
-/* Meatball (3-dots) Menu */
-.menu-container { position: absolute; top: 15px; right: 15px; }
-.menu-btn { 
-    background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #888; 
-}
-.menu-content {
-    display: none; position: absolute; right: 0; background: white;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; z-index: 10;
-}
-.menu-container:hover .menu-content { display: block; }
-.menu-item { 
-    padding: 0.8rem 1.2rem; cursor: pointer; color: #333; text-decoration: none; display: block;
-}
-.menu-item:hover { background: #f8f9fa; color: #eb4f7a; }
-
-/* src/app/static/css/style.css */
 
 .status-indicator {
     display: inline-block;

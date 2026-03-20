@@ -7,7 +7,7 @@ from src.app.routes.utilities import utilities
 from src.app.routes.groups import groups
 from src.app.routes.home import home
 from src.app.routes.setup import setup
-from src.app.routes.recurring import recurring
+from src.app.routes.subscriptions import subscriptions
 
 
 def create_app():
@@ -23,7 +23,7 @@ def create_app():
     app.register_blueprint(setup)
     app.register_blueprint(utilities)
     app.register_blueprint(groups)
-    app.register_blueprint(recurring)
+    app.register_blueprint(subscriptions)
 
     return app
 
