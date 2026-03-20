@@ -32,14 +32,17 @@ def create():
     
     user_id = session["user_id"]
     group_name = request.form.get('group_name')
+    group_type = request.form.get('group_type', 'group') 
     names = request.form.getlist('new_names[]')
     emails = request.form.getlist('new_emails[]')
     
+    if group_type == 'individual' and names:
+        group_name = names[0]
+    
     if group_name:
         try:
-            group_id = create_group(user_id, group_name)
+            group_id = create_group(user_id, group_name, group_type)
             
-            # Changed the IF statement below so email is truly optional
             for name, email in zip(names, emails):
                 if name.strip(): 
                     add_group_member(group_id, name.strip(), email.strip())

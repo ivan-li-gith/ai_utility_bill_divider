@@ -7,42 +7,66 @@
     <div class="d-flex align-center" style="gap: 1rem;">
         <form action="{{ url_for('recurring.recurring_page') }}" method="GET">
             <select name="group_id" onchange="this.form.submit()" style="padding: 8px; border-radius: 4px;">
-                {% for group in groups %}
-                <option value="{{ group.group_id }}" {% if group.group_id == selected_group_id %}selected{% endif %}>
-                    {{ group.group_name }}
-                </option>
-                {% endfor %}
+                <option value="0" {% if selected_group_id == 0 %}selected{% endif %}>All Subscriptions</option>
+                <optgroup label="Groups">
+                    {% for group in groups if group.group_type == 'group' %}
+                    <option value="{{ group.group_id }}" {% if group.group_id == selected_group_id %}selected{% endif %}>
+                        {{ group.group_name }}
+                    </option>
+                    {% endfor %}
+                </optgroup>
+                <optgroup label="Individuals">
+                    {% for group in groups if group.group_type == 'individual' %}
+                    <option value="{{ group.group_id }}" {% if group.group_id == selected_group_id %}selected{% endif %}>
+                        {{ group.group_name }}
+                    </option>
+                    {% endfor %}
+                </optgroup>
             </select>
         </form>
         <button class="btn btn-pink" style="width: auto;" onclick="openModal('add')">+ Add Subscription</button>
     </div>
 </div>
 
-<div class="card" style="max-width: 600px; margin: 0 auto;">
-    <div class="card-header">Managed Subscriptions</div>
-    <div class="card-body">
-        <div class="vertical-stack">
-            {% for exp in expenses %}
-            <div class="card mb-2" style="position: relative; border: 1px solid #eee;">
-                <div class="menu-container">
-                    <button class="menu-btn">⋮</button>
-                    <div class="menu-content">
-                        <a href="#" class="menu-item" onclick="openModal('edit', '{{ exp.recurring_id }}', '{{ exp.expense_name }}', '{{ exp.amount }}', '{{ exp.billing_day }}')">Edit</a>
-                        <form action="{{ url_for('recurring.delete', recurring_id=exp.recurring_id) }}" method="POST">
-                            <input type="hidden" name="group_id" value="{{ selected_group_id }}">
-                            <button type="submit" class="menu-item" style="border:none; width:100%; text-align:left; background:none; color:#dc3545;">Delete</button>
-                        </form>
+<div class="card" style="max-width: 700px; margin: 0 auto; border: none; box-shadow: none; background: transparent;">
+    <div class="vertical-stack">
+        {% for exp in expenses %}
+        <div class="card mb-2" style="position: relative; border: 1px solid #eee; border-radius: 12px;">
+            <div class="card-body d-flex justify-between align-center" style="padding: 1.25rem;">
+                
+                <div>
+                    <h3 style="margin: 0 0 0.25rem 0;">{{ exp.expense_name }}</h3>
+                    <div style="color: #666; font-size: 0.95rem;">
+                        <span style="color: #eb4f7a; font-weight: 600;">Charging: {{ exp.group_name }}</span><br>
+                        <span>${{ "%.2f"|format(exp.amount) }} • Due day: {{ exp.billing_day }}</span>
                     </div>
                 </div>
-                <div class="card-body" style="padding: 1rem;">
-                    <strong>{{ exp.expense_name }}</strong><br>
-                    <small style="color: #666;">${{ "%.2f"|format(exp.amount) }} • Due day: {{ exp.billing_day }}</small>
+
+                <div class="d-flex align-center" style="gap: 1.25rem;">
+                    <a href="#" 
+                    style="color: #0d6efd; text-decoration: none; font-weight: 600; font-size: 0.9rem;"
+                    onclick="openModal('edit', '{{ exp.recurring_id }}', '{{ exp.expense_name }}', '{{ exp.amount }}', '{{ exp.billing_day }}', '{{ exp.group_id }}')">
+                    Edit
+                    </a>
+
+                    <form action="{{ url_for('recurring.delete', recurring_id=exp.recurring_id) }}" 
+                        method="POST" 
+                        onsubmit="return confirm('Delete this subscription?')"
+                        style="margin: 0;">
+                        <input type="hidden" name="group_id" value="{{ selected_group_id }}">
+                        <button type="submit" 
+                                style="background: none; border: none; color: #dc3545; font-weight: 600; font-size: 0.9rem; cursor: pointer; padding: 0;">
+                            Delete
+                        </button>
+                    </form>
                 </div>
             </div>
-            {% else %}
-            <p class="text-center" style="color: #999;">No recurring expenses yet.</p>
-            {% endfor %}
         </div>
+        {% else %}
+        <div class="text-center" style="padding: 3rem; color: #999;">
+            <p>No recurring expenses found.</p>
+        </div>
+        {% endfor %}
     </div>
 </div>
 
@@ -51,7 +75,26 @@
         <span class="close-btn" onclick="closeModal()">&times;</span>
         <h3 id="modalTitle">Add Subscription</h3>
         <form id="recurringForm" method="POST">
-            <input type="hidden" name="group_id" value="{{ selected_group_id }}">
+            
+            <div class="form-group mb-3">
+                <label>Charge To (Group or Individual)</label>
+                <select name="group_id" id="modalGroupId" class="form-control" required style="width: 100%; padding: 8px;">
+                    <option value="" disabled selected>-- Select target --</option>
+                    
+                    <optgroup label="My Groups">
+                        {% for group in groups if group.group_type == 'group' %}
+                        <option value="{{ group.group_id }}">{{ group.group_name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                    
+                    <optgroup label="My Individuals">
+                        {% for group in groups if group.group_type == 'individual' %}
+                        <option value="{{ group.group_id }}">{{ group.group_name }}</option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
+
             <div class="form-group">
                 <label>Subscription Name</label>
                 <input type="text" name="expense_name" id="modalName" placeholder="e.g. Netflix, Wifi" required>
@@ -64,7 +107,7 @@
                 <label>Billing Day (1-31)</label>
                 <input type="number" name="billing_day" id="modalDay" min="1" max="31" required>
             </div>
-            <button type="submit" class="btn btn-pink" id="submitBtn">Save Subscription</button>
+            <button type="submit" class="btn btn-pink" id="submitBtn" style="margin-top: 1rem;">Save Subscription</button>
         </form>
     </div>
 </div>
@@ -72,10 +115,12 @@
 <script>
 function closeModal() { document.getElementById('recurringModal').style.display = 'none'; }
 
-function openModal(mode, id, name, amount, day) {
+// Updated openModal to handle the group/individual selection
+function openModal(mode, id, name, amount, day, groupId) {
     const modal = document.getElementById('recurringModal');
     const form = document.getElementById('recurringForm');
     const title = document.getElementById('modalTitle');
+    const groupSelect = document.getElementById('modalGroupId');
     
     if (mode === 'edit') {
         title.innerText = "Edit Subscription";
@@ -83,10 +128,14 @@ function openModal(mode, id, name, amount, day) {
         document.getElementById('modalName').value = name;
         document.getElementById('modalAmount').value = amount;
         document.getElementById('modalDay').value = day;
+        groupSelect.value = groupId; // Highlight the currently assigned group
     } else {
         title.innerText = "Add Subscription";
         form.action = "{{ url_for('recurring.add') }}";
         form.reset();
+        // If the user is currently filtering by a group on the main page, 
+        // default the dropdown to that group.
+        groupSelect.value = "{{ selected_group_id }}";
     }
     modal.style.display = 'flex';
 }

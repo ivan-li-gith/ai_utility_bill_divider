@@ -1,14 +1,14 @@
 from sqlalchemy import text
 from .database import get_engine
 
-def create_group(owner_id, group_name):
+def create_group(owner_id, group_name, group_type='group'):
     engine = get_engine()
     with engine.begin() as conn:
         # Create the group record
         result = conn.execute(text("""
-            INSERT INTO group_list (group_name, owner_id)
-            VALUES (:name, :oid)
-        """), {"name": group_name, "oid": owner_id})
+            INSERT INTO group_list (group_name, owner_id, group_type)
+            VALUES (:name, :oid, :type)
+        """), {"name": group_name, "oid": owner_id, "type": group_type})
         
         group_id = result.lastrowid
         
@@ -31,9 +31,8 @@ def create_group(owner_id, group_name):
 def get_user_groups(user_id):
     """Fetches groups and includes a JSON string of member details."""
     engine = get_engine()
-    # Use JSON_ARRAYAGG and JSON_OBJECT for structured member data
     query = text("""
-        SELECT gl.group_id, gl.group_name, gl.owner_id,
+        SELECT gl.group_id, gl.group_name, gl.owner_id, gl.group_type,
                JSON_ARRAYAGG(
                    JSON_OBJECT(
                        'id', gm.group_member_id,

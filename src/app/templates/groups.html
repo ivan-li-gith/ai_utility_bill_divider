@@ -1,18 +1,19 @@
 {% extends "navbar_base.html" %}
 {% block content %}
 <div class="container" style="max-width: 800px;">
+    
     <div class="d-flex justify-between align-center mb-4">
         <h2>My Groups</h2>
-        <button class="btn btn-pink" style="width: auto;" onclick="openModal('create')">+ New Group</button>
+        <button class="btn btn-pink" style="width: auto;" onclick="openModal('create', 'group')">+ New Group</button>
     </div>
 
-    <div class="vertical-stack">
-        {% for group in groups %}
+    <div class="vertical-stack mb-5" style="margin-bottom: 3rem;">
+        {% for group in groups if group.group_type == 'group' %}
         <div class="card" style="position: relative;">
             <div class="menu-container">
                 <button class="menu-btn">⋮</button>
                 <div class="menu-content">
-                    <a href="#" class="menu-item" onclick="openModal('edit', '{{ group.group_id }}', '{{ group.group_name }}', {{ group.members | tojson | forceescape }})">Edit</a>
+                    <a href="#" class="menu-item" onclick="openModal('edit', 'group', '{{ group.group_id }}', '{{ group.group_name }}', {{ group.members | tojson | forceescape }})">Edit</a>
                     <form action="{{ url_for('groups.delete', group_id=group.group_id) }}" method="POST" onsubmit="return confirm('Delete group?')">
                         <button type="submit" class="menu-item" style="border:none; width:100%; text-align:left; background:none;">Delete</button>
                     </form>
@@ -32,6 +33,37 @@
                 </ul>
             </div>
         </div>
+        {% else %}
+            <p class="text-center" style="color: #999;">No groups created yet.</p>
+        {% endfor %}
+    </div>
+
+    <div class="d-flex justify-between align-center mb-4">
+        <h2>My Individuals</h2>
+        <button class="btn btn-outline" style="width: auto;" onclick="openModal('create', 'individual')">+ New Individual</button>
+    </div>
+
+    <div class="vertical-stack">
+        {% for group in groups if group.group_type == 'individual' %}
+        <div class="card" style="position: relative;">
+            <div class="menu-container">
+                <button class="menu-btn">⋮</button>
+                <div class="menu-content">
+                    <a href="#" class="menu-item" onclick="openModal('edit', 'individual', '{{ group.group_id }}', '{{ group.group_name }}', {{ group.members | tojson | forceescape }})">Edit</a>
+                    <form action="{{ url_for('groups.delete', group_id=group.group_id) }}" method="POST" onsubmit="return confirm('Remove individual?')">
+                        <button type="submit" class="menu-item" style="border:none; width:100%; text-align:left; background:none;">Delete</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body">
+                <h3>{{ group.group_name }}</h3>
+                {% for member in group.members if member.role != 'owner' %}
+                    <p style="color: #666; margin-bottom: 0;">Email: {{ member.email if member.email else 'None' }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+            <p class="text-center" style="color: #999;">No individuals added yet.</p>
         {% endfor %}
     </div>
 </div>
@@ -41,20 +73,35 @@
         <span class="close-btn" onclick="closeModal()">&times;</span>
         <h3 id="modalTitle">Create New Group</h3>
         <form id="groupForm" method="POST">
-            <div class="form-group">
-                <label>Group Name</label>
-                <input type="text" name="group_name" id="modalGroupName" required>
-            </div>
+            <input type="hidden" name="group_type" id="modalGroupType" value="group">
             
-            <div id="membersSection">
-                <div class="d-flex justify-between align-center">
-                    <label>Add Members</label>
-                    <button type="button" class="btn" style="width: auto;" onclick="addMemberRow()">+</button>
+            <div id="groupInputView">
+                <div class="form-group">
+                    <label>Group Name</label>
+                    <input type="text" name="group_name" id="modalGroupName" required>
                 </div>
-                <div id="member-list-container"></div>
+                
+                <div id="membersSection">
+                    <div class="d-flex justify-between align-center">
+                        <label>Add Members</label>
+                        <button type="button" class="btn" id="addMemberBtn" style="width: auto;" onclick="addMemberRow()">+</button>
+                    </div>
+                    <div id="group-member-list-container"></div>
+                </div>
+            </div>
+
+            <div id="personInputView" style="display: none;">
+                <div class="form-group mb-3">
+                    <label>Person's Name</label>
+                    <input type="text" name="new_names[]" id="modalPersonName" placeholder="e.g., April, Roommate A">
+                </div>
+                <div class="form-group">
+                    <label>Email (Optional)</label>
+                    <input type="email" name="new_emails[]" id="modalPersonEmail" placeholder="e.g., april@example.com">
+                </div>
             </div>
             
-            <button type="submit" class="btn btn-pink" id="submitBtn" style="margin-top: 1rem;">Save Group</button>
+            <button type="submit" class="btn btn-pink" id="submitBtn" style="margin-top: 1rem;">Save</button>
         </form>
     </div>
 </div>
@@ -71,8 +118,9 @@ window.onclick = function(event) {
     }
 }
 
+// Function remains the same, just target different container
 function addMemberRow() {
-    const container = document.getElementById('member-list-container');
+    const container = document.getElementById('group-member-list-container');
     const row = document.createElement('div');
     row.className = 'input-group mb-2 d-flex';
     row.innerHTML = `
@@ -83,52 +131,93 @@ function addMemberRow() {
     container.appendChild(row);
 }
 
-function openModal(mode, id, name, members = []) {
+// Updated openModal function to handle view switching
+function openModal(mode, type, id, name, members = []) {
     const modal = document.getElementById('groupModal');
     const title = document.getElementById('modalTitle');
     const form = document.getElementById('groupForm');
-    const nameInput = document.getElementById('modalGroupName');
-    const container = document.getElementById('member-list-container');
+    const typeInput = document.getElementById('modalGroupType');
+    
+    // View containers
+    const groupView = document.getElementById('groupInputView');
+    const personView = document.getElementById('personInputView');
+    
+    // Input Fields
+    const groupNameInput = document.getElementById('modalGroupName');
+    const personNameInput = document.getElementById('modalPersonName');
+    const personEmailInput = document.getElementById('modalPersonEmail');
+    
+    // Member containers/buttons
+    const groupContainer = document.getElementById('group-member-list-container');
     const submitBtn = document.getElementById('submitBtn');
     
-    container.innerHTML = ''; 
+    // Reset/Setup
+    groupContainer.innerHTML = ''; 
+    typeInput.value = type;
+
+    // View Switching: Group vs Individual
+    if (type === 'individual') {
+        title.innerText = (mode === 'create') ? "Add Individual" : "Edit Individual";
+        groupView.style.display = 'none';
+        personView.style.display = 'block';
+        
+        // De-require Group Name, require Person Name
+        groupNameInput.required = false;
+        personNameInput.required = true;
+        
+    } else {
+        title.innerText = (mode === 'create') ? "Create New Group" : "Edit Group";
+        groupView.style.display = 'block';
+        personView.style.display = 'none';
+        
+        // Require Group Name, de-require Person Name
+        groupNameInput.required = true;
+        personNameInput.required = false;
+    }
 
     if (mode === 'edit') {
-        title.innerText = "Edit Group";
         submitBtn.innerText = "Save Changes";
         form.action = `/groups/edit/${id}`;
-        nameInput.value = name;
-
-        members.forEach(m => {
-            const row = document.createElement('div');
-            row.className = 'input-group mb-2 d-flex';
-            
-            if (m.role === 'owner') {
-                // Owner is disabled and cannot be edited
-                row.style.opacity = '0.6';
-                row.innerHTML = `
-                    <input type="text" value="${m.name}" disabled style="flex: 1; background: #f0f0f0;">
-                    <input type="email" value="${m.email || ''}" disabled style="flex: 2; background: #f0f0f0;">
-                    <span style="padding: 0.5rem;" title="Owner">👑</span>
-                `;
-            } else {
-                // Existing members are assigned to 'existing_names[]' arrays and allowed to be edited
-                row.innerHTML = `
-                    <input type="hidden" name="existing_ids[]" value="${m.id}">
-                    <input type="text" name="existing_names[]" value="${m.name}" required style="flex: 1;">
-                    <input type="email" name="existing_emails[]" value="${m.email || ''}" style="flex: 2;">
-                    <button type="button" class="btn btn-outline" style="color: #dc3545;" onclick="removeExistingMember(${m.id}, this)">×</button>
-                `;
-            }
-            container.appendChild(row);
-        });
-    } else {
-        title.innerText = "Create New Group";
-        submitBtn.innerText = "Create Group";
-        form.action = "{{ url_for('groups.create') }}";
-        nameInput.value = "";
         
-        addMemberRow();
+        // Map data to correct view
+        if (type === 'individual') {
+            personNameInput.value = name;
+            const individual = members.find(m => m.role !== 'owner');
+            personEmailInput.value = individual ? (individual.email || '') : '';
+            
+        } else {
+            groupNameInput.value = name;
+            members.forEach(m => {
+                const row = document.createElement('div');
+                row.className = 'input-group mb-2 d-flex';
+                
+                if (m.role === 'owner') {
+                    row.style.opacity = '0.6';
+                    row.innerHTML = `
+                        <input type="text" value="${m.name}" disabled style="flex: 1; background: #f0f0f0;">
+                        <input type="email" value="${m.email || ''}" disabled style="flex: 2; background: #f0f0f0;">
+                        <span style="padding: 0.5rem;" title="Owner">👑</span>
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <input type="hidden" name="existing_ids[]" value="${m.id}">
+                        <input type="text" name="existing_names[]" value="${m.name}" required style="flex: 1;">
+                        <input type="email" name="existing_emails[]" value="${m.email || ''}" style="flex: 2;">
+                        <button type="button" class="btn btn-outline" style="color: #dc3545;" onclick="removeExistingMember(${m.id}, this)">×</button>
+                    `;
+                }
+                groupContainer.appendChild(row);
+            });
+        }
+    } else {
+        submitBtn.innerText = "Create";
+        form.action = "{{ url_for('groups.create') }}";
+        form.reset(); // Clear all inputs
+        
+        // Ensure standard group starts with one blank member row
+        if (type === 'group') {
+            addMemberRow();
+        }
     }
     modal.style.display = 'flex';
 }

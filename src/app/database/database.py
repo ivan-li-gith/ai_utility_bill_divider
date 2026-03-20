@@ -28,6 +28,7 @@ def init_db():
                 group_id INT AUTO_INCREMENT PRIMARY KEY,
                 group_name VARCHAR(255),
                 owner_id VARCHAR(255),
+                group_type ENUM('group', 'individual') DEFAULT 'group',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )"""))
         

@@ -17,11 +17,18 @@ def recurring_page():
     user_id = session['user_id']
     user_groups = get_user_groups(user_id)
     
+    # 1. Get the group_id from the URL. Use None as default instead of 0.
     group_id = request.args.get('group_id', type=int)
-    if not group_id and user_groups:
+
+    # 2. If it is the first time visiting (None) and user has groups, default to the first group.
+    # If the user explicitly clicked "All" (0), this block will be skipped.
+    if group_id is None and user_groups:
         group_id = user_groups[0]['group_id']
+    elif group_id is None:
+        group_id = 0 # Default to All if they have no groups yet
         
-    expenses = get_recurring_expenses(group_id) if group_id else []
+    # 3. Correct the function call to pass both user_id and group_id
+    expenses = get_recurring_expenses(user_id, group_id)
     
     return render_template('recurring.html', 
                            expenses=expenses, 
