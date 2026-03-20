@@ -4,13 +4,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# global var / makes this into a singleton  
+_engine = None 
+
 def get_engine():
-    DB_HOST = os.environ.get("DB_HOST")
-    DB_USER = os.environ.get("DB_USER")
-    DB_PASS = os.environ.get("DB_PASS") 
-    DB_NAME = os.environ.get("DB_NAME")
-    connection_string = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:3306/{DB_NAME}"
-    return create_engine(connection_string)
+    global _engine
+    
+    if _engine is None:
+        DB_HOST = os.environ.get("DB_HOST")
+        DB_USER = os.environ.get("DB_USER")
+        DB_PASS = os.environ.get("DB_PASS") 
+        DB_NAME = os.environ.get("DB_NAME")
+        connection_string = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:3306/{DB_NAME}"
+        
+        _engine = create_engine(connection_string)
+    return _engine
 
 def init_db():
     engine = get_engine()

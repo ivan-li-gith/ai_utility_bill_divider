@@ -139,5 +139,23 @@ function openModal(mode, id, name, amount, day, groupId) {
     }
     modal.style.display = 'flex';
 }
+
+function deleteSubscription(id, buttonElement) {
+    if (!confirm('Delete this subscription?')) return;
+
+    fetch(`/recurring/delete/${id}`, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Smoothly remove the card from the UI
+            const card = buttonElement.closest('.card');
+            card.style.opacity = '0';
+            setTimeout(() => card.remove(), 300);
+        }
+    });
+}
 </script>
 {% endblock %}

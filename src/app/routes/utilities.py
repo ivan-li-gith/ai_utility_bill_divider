@@ -1,5 +1,5 @@
 import pandas as pd
-from flask import Blueprint, render_template, request, session, redirect, url_for, flash
+from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify
 from src.app.core.parser import extract_from_pdf, get_bill_details
 from src.app.database import get_user_groups, save_bill_history, load_history, get_group_members, save_tracker, get_paid_status
 
@@ -83,20 +83,47 @@ def update_status():
     user_id = session['user_id']
     month = request.form.get('month')
     group_id = request.form.get('group_id', type=int)
-    members = get_group_members(group_id)
-    full_member_list = get_member_names(user_id, members)
-
-    updated_rows = [{
-        "Roommate Name": name,
-        "Paid": request.form.get(f"paid_{month}_{name}") == 'on',
-        "Current Month Split": float(request.form.get(f"split_{month}_{name}")),
-        "Rollover Amount": float(request.form.get(f"rollover_{month}_{name}")),
-        "Total Owed": float(request.form.get(f"total_{month}_{name}"))
-    } for name in full_member_list]
     
+    members = get_group_members(group_id)
+    names = get_member_names(user_id, members)
+    
+    updated_rows = []    
+    for name in names:
+        is_paid = request.form.get(f"paid_{month}_{name}") == 'on'
+        split_val = float(request.form.get(f"split_{month}_{name}", 0))
+        rollover_val = float(request.form.get(f"rollover_{month}_{name}", 0))
+        total_val = round(split_val + rollover_val, 2)
+
+        updated_rows.append({
+            "Roommate Name": name,
+            "Paid": is_paid,
+            "Current Month Split": split_val,
+            "Rollover Amount": rollover_val,
+            "Total Owed": total_val
+        })
+        
     df = pd.DataFrame(updated_rows)
     save_tracker(user_id, df, month, group_id)
-    flash(f"Updated payments for {month}", "success")
+    billing_history = load_history(user_id, group_id)
+    updated_months = calculate_utilities(user_id, billing_history, names, group_id)
+    
+    all_updates = {}
+    for m in updated_months:
+        month_name = m['month']
+        all_updates[month_name] = {
+            row['Roommate Name']: {
+                "total": f"{row['Total Owed']:.2f}",
+                "rollover": f"{row['Rollover Amount']:.2f}"
+            }
+            for _, row in m['roommates'].iterrows()
+        }
+        
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            "status": "success", 
+            "updates": all_updates
+        })
+    
     return redirect(url_for('utilities.index', group_id=group_id))
 
 def calculate_utilities(user_id, billing_history, names, group_id):

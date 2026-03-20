@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, session, redirect, url_for, flash
+from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify
 from src.app.database import (
     get_user_groups, 
     get_recurring_expenses, 
@@ -67,4 +67,8 @@ def delete(recurring_id):
     group_id = request.form.get('group_id')
     delete_recurring_expense(recurring_id)
     flash("Subscription removed.", "info")
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({"status": "success"})
+    
     return redirect(url_for('recurring.recurring_page', group_id=group_id))
