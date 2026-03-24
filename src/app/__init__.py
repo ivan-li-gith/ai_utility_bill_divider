@@ -5,10 +5,11 @@ from src.app.database import init_db
 from src.app.routes.auth import auth
 from src.app.routes.utilities import utilities
 from src.app.routes.groups import groups
-from src.app.routes.home import home
+from src.app.routes.dashboard import dashboard
 from src.app.routes.setup import setup
 from src.app.routes.subscriptions import subscriptions
 from src.app.routes.expenses import expenses
+from src.app.routes.activity import activity
 
 def create_app():
     load_dotenv()
@@ -18,13 +19,15 @@ def create_app():
     with app.app_context():
         init_db()
     
-    app.register_blueprint(home)
+    app.register_blueprint(dashboard)
     app.register_blueprint(auth)
     app.register_blueprint(setup)
     app.register_blueprint(utilities)
     app.register_blueprint(groups)
     app.register_blueprint(subscriptions)
     app.register_blueprint(expenses)
+    app.register_blueprint(activity)
+
 
     return app
 

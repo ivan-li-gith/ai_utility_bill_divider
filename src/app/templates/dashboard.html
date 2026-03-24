@@ -1,0 +1,96 @@
+{% extends "navbar_base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-between align-center mb-4">
+    <h2>Dashboard</h2>
+    
+    <div class="d-flex align-center" style="gap: 1rem;">
+        <form action="{{ url_for('dashboard.index') }}" method="GET" class="d-flex align-center" style="gap: 0.5rem;">
+            <label style="font-weight: 600; white-space: nowrap; color: #666;">Filter by:</label>
+            <select name="group_id" onchange="this.form.submit()" style="padding: 8px; border-radius: 4px; min-width: 150px; border: 1px solid #ddd;">
+                <option value="0" {% if selected_group_id == 0 %}selected{% endif %}>-- ALL --</option>
+                
+                <optgroup label="Groups">
+                    {% for group in groups if group.group_type == 'group' %}
+                        <option value="{{ group.group_id }}" {% if group.group_id == selected_group_id %}selected{% endif %}>{{ group.group_name }}</option>
+                    {% endfor %}
+                </optgroup>
+                
+                <optgroup label="Individuals">
+                    {% for group in groups if group.group_type == 'individual' %}
+                        <option value="{{ group.group_id }}" {% if group.group_id == selected_group_id %}selected{% endif %}>{{ group.group_name }}</option>
+                    {% endfor %}
+                </optgroup>
+            </select>
+        </form>
+        
+        <button class="btn btn-pink" style="width: auto;" onclick="openUnifiedModal()">+ Add Expense</button>
+    </div>
+</div>
+
+<div class="card shadow mb-5" style="border-top: 4px solid #eb4f7a; border-radius: 12px;">
+    <div class="card-header d-flex justify-between align-center" style="background: white;">
+        <h3 style="margin: 0;">Outstanding Balances</h3>
+        <span class="badge" style="background: #f8d7da; color: #dc3545; font-size: 0.9rem; padding: 6px 12px;">
+            Total Uncollected: ${{ "%.2f"|format(total_uncollected) }}
+        </span>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        <ul class="list-group" style="margin: 0; border: none; border-radius: 0;">
+            {% for person in debtors %}
+            <li class="list-item" style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #eee; display: block;">
+                
+                <div class="d-flex justify-between align-center">
+                    <div class="d-flex align-center" style="gap: 1rem;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #0d6efd; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">
+                            {{ person.name[0]|upper }}
+                        </div>
+                        <div>
+                            <h4 style="margin: 0 0 0.25rem 0;">{{ person.name }}</h4>
+                            <a href="#" onclick="toggleBreakdown('breakdown-{{ loop.index }}'); return false;" style="font-size: 0.85rem; color: #666; text-decoration: underline;">View Breakdown ▼</a>
+                        </div>
+                    </div>
+                    <div class="d-flex align-center" style="gap: 1.5rem;">
+                        <h3 style="margin: 0; color: #dc3545;">${{ "%.2f"|format(person.total) }}</h3>
+                        <a href="#" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem;">Notify</a>
+                    </div>
+                </div>
+                
+                <div id="breakdown-{{ loop.index }}" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #ddd; padding-left: 3.5rem;">
+                    <div class="d-flex justify-between mb-2" style="font-size: 0.9rem; color: #444;">
+                        <span>Utilities</span>
+                        <strong>${{ "%.2f"|format(person.utilities) }}</strong>
+                    </div>
+                    <div class="d-flex justify-between mb-2" style="font-size: 0.9rem; color: #444;">
+                        <span>One-Off Expenses</span>
+                        <strong>${{ "%.2f"|format(person.expenses) }}</strong>
+                    </div>
+                    <div class="d-flex justify-between" style="font-size: 0.9rem; color: #444;">
+                        <span>Subscriptions</span>
+                        <strong>${{ "%.2f"|format(person.subscriptions) }}</strong>
+                    </div>
+                </div>
+
+            </li>
+            {% else %}
+            <li class="list-item text-center" style="padding: 3rem; color: #198754; font-weight: 600;">
+                🎉 Everyone is fully settled up!
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<script>
+// Simple script to toggle the visual breakdown open and closed
+function toggleBreakdown(id) {
+    const el = document.getElementById(id);
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+    } else {
+        el.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

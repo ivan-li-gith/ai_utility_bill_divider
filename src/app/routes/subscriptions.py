@@ -45,7 +45,7 @@ def add():
             return jsonify({"status": "success"})
         flash(f"Added subscription expense: {name}", "success")
         
-    return redirect(url_for('subscriptions.index', group_id=group_id))
+    return redirect(url_for('activity.index', group_id=group_id))
 
 @subscriptions.route('/subscription/edit/<int:subscription_id>', methods=['POST'])
 def edit(subscription_id):

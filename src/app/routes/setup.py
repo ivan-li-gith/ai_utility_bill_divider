@@ -28,7 +28,7 @@ def save():
         else:
             flash(f"Profile created! Welcome, {display_name}.", "success")
             
-        return redirect(url_for('home.home_page'))
+        return redirect(url_for('dashboard.index'))
         
     except Exception as e:
         flash(f"An error occurred during setup: {e}", "danger")

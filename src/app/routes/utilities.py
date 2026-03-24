@@ -49,7 +49,7 @@ def upload():
     
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({"status": "success"})
-    return redirect(url_for('utilities.index', group_id=group_id))
+    return redirect(url_for('activity.index', group_id=group_id))
 
 @utilities.route('/utilities/save', methods=['POST'])
 def save():
@@ -82,7 +82,7 @@ def save():
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({"status": "success"})
     
-    return redirect(url_for('utilities.index', group_id=group_id))
+    return redirect(url_for('activity.index', group_id=group_id))
 
 @utilities.route('/utilities/update_status', methods=['POST'])
 def update_status():

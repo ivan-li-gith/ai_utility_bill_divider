@@ -7,7 +7,7 @@ auth = Blueprint('auth', __name__)
 @auth.route('/')
 def index():
     if "user_id" in session:
-        return redirect(url_for('home.home_page'))
+        return redirect(url_for('dashboard.index'))
     return redirect(url_for('auth.login_page'))
 
 @auth.route('/login', methods=['GET', 'POST'])
@@ -24,7 +24,7 @@ def login_page():
                 
                 if not profile:
                     return redirect(url_for("setup.setup_page")) 
-                return redirect(url_for("home.home_page"))
+                return redirect(url_for("dashboard.index"))
         except Exception as e:
             flash(f"Login failed: {str(e)}", "danger")
             
@@ -74,7 +74,7 @@ def oauth_callback():
                 return redirect(url_for("setup.setup_page"))
             
             session["user_name"] = profile.get("display_name")
-            return redirect(url_for("home.home_page"))
+            return redirect(url_for("dashboard.index"))
         except Exception as e:
             flash(f"Authentication error: {e}", "danger")
             return redirect(url_for("auth.login_page"))

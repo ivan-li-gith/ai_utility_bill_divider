@@ -50,7 +50,7 @@ def upload_receipt():
         except Exception as e:
             flash(f"Failed to process receipt: {e}", "danger")
             
-    return redirect(url_for('expenses.index'))
+    return redirect(url_for('activity.index'))
 
 @expenses.route('/expenses/manual_add', methods=['POST'])
 def manual_add():
@@ -74,7 +74,7 @@ def manual_add():
             flash(f"Error saving expense: {e}", "danger")
             
     # Redirect back to the index for that specific group
-    return redirect(url_for('expenses.index', group_id=group_id))
+    return redirect(url_for('activity.index', group_id=group_id))
 
 @expenses.route('/expenses/delete/<int:expense_id>', methods=['POST'])
 def delete(expense_id):
