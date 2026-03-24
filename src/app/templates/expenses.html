@@ -1,0 +1,178 @@
+{% extends "navbar_base.html" %}
+{% block content %}
+<div class="container" style="max-width: 900px;">
+    
+    <div class="d-flex justify-between align-center mb-4">
+        <h2>Expenses</h2>
+        <div class="btn btn-pink" style="width: auto; opacity: 0.6; cursor: not_allowed;">
+            View Master Ledger (CSV)
+        </div>
+    </div>
+
+    <div class="mb-5" style="margin-bottom: 3rem;">
+        <h3 style="color: #444; margin-bottom: 1.25rem;">+ Add New Expense</h3>
+        <div class="grid-2">
+            
+            <div class="card shadow" style="border-radius: 12px;">
+                <div class="card-body">
+                    <h4 style="margin: 0 0 1.25rem 0; color: #eb4f7a; font-size: 1.1rem;">
+                        <span style="font-size: 1.4rem;">📸</span> Scan Receipt
+                    </h4>
+                    <form action="{{ url_for('expenses.upload_receipt') }}" method="POST" enctype="multipart/form-data">
+                        
+                        <div class="form-group mb-3">
+                            <label style="color: #666; font-size: 0.9rem;">Split With (Optional)</label>
+                            <select name="group_id" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+                                <option value="">-- Just Me (No Split) --</option>
+                                <optgroup label="Groups">
+                                    {% for group in groups if group.group_type == 'group' %}
+                                        <option value="{{ group.group_id }}" {% if group.group_id | string == default_group_id | string %}selected{% endif %}>{{ group.group_name }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                                <optgroup label="Individuals">
+                                    {% for group in groups if group.group_type == 'individual' %}
+                                        <option value="{{ group.group_id }}" {% if group.group_id | string == default_group_id | string %}selected{% endif %}>{{ group.group_name }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label style="color: #666; font-size: 0.9rem;">Take a photo or upload file</label>
+                            <input type="file" name="receipt_image" accept=".png,.jpg,.jpeg,.heic" capture="environment" required 
+                                   style="width: 100%; padding: 1rem; border: 2px dashed #ddd; border-radius: 8px; text-align: center; background: #fafafa; font-size: 0.85rem;">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-pink" style="width: 100%;">Start AI Parsing</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow" style="border-radius: 12px; border: 1px solid #eee;">
+                <div class="card-body">
+                    <h4 style="margin: 0 0 1.25rem 0; color: #444; font-size: 1.1rem;">
+                        <span style="font-size: 1.4rem;">⌨️</span> Manual Entry
+                    </h4>
+                    <form action="{{ url_for('expenses.manual_add') }}" method="POST">
+                        
+                        <div class="form-group mb-3">
+                            <label style="color: #666; font-size: 0.9rem;">Split With (Optional)</label>
+                            <select name="group_id" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;">
+                                <option value="">-- Just Me (No Split) --</option>
+                                <optgroup label="Groups">
+                                    {% for group in groups if group.group_type == 'group' %}
+                                        <option value="{{ group.group_id }}" {% if group.group_id | string == default_group_id | string %}selected{% endif %}>{{ group.group_name }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                                <optgroup label="Individuals">
+                                    {% for group in groups if group.group_type == 'individual' %}
+                                        <option value="{{ group.group_id }}" {% if group.group_id | string == default_group_id | string %}selected{% endif %}>{{ group.group_name }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label style="color: #666; font-size: 0.9rem;">Description</label>
+                            <input type="text" name="item_name" placeholder="e.g., Target Groceries, Uber Ride" required style="font-size: 0.9rem;">
+                        </div>
+
+                        <div class="d-flex" style="gap: 1rem;">
+                            <div class="form-group mb-4" style="flex: 1;">
+                                <label style="color: #666; font-size: 0.9rem;">Date</label>
+                                <input type="date" name="date" required style="font-size: 0.9rem;">
+                            </div>
+                            <div class="form-group mb-4" style="flex: 1;">
+                                <label style="color: #666; font-size: 0.9rem;">Amount ($)</label>
+                                <input type="number" name="amount" step="0.01" min="0" placeholder="0.00" required style="font-size: 0.9rem;">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-outline" style="width: 100%; color: #444; border-color: #ddd;">Add to Ledger</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {% if staged_items %}
+    {% endif %}
+
+    <div class="card shadow" style="border-radius: 12px;">
+        <div class="card-header d-flex justify-between align-center" style="border-bottom: 1px solid #eee;">
+            <h3 style="margin: 0;">Expense History</h3>
+            
+            <div style="width: 250px;">
+                <select id="groupHistoryFilter" class="form-control" style="font-size: 0.9rem; padding: 6px 10px;" onchange="updateHistoryView(this.value)">
+                    <option value="" disabled {% if not default_group_id %}selected{% endif %}>-- Choose a group --</option>
+                    
+                    <optgroup label="Groups">
+                        {% for group in groups if group.group_type == 'group' %}
+                            <option value="{{ group.group_id }}" {% if group.group_id | string == default_group_id | string %}selected{% endif %}>
+                                {{ group.group_name }}
+                            </option>
+                        {% endfor %}
+                    </optgroup>
+                    
+                    <optgroup label="Individuals">
+                        {% for group in groups if group.group_type == 'individual' %}
+                            <option value="{{ group.group_id }}" {% if group.group_id | string == default_group_id | string %}selected{% endif %}>
+                                {{ group.group_name }}
+                            </option>
+                        {% endfor %}
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            {% if not default_group_id %}
+                <p class="text-center" style="color: #999; padding: 2rem 0;">Please select a group or individual to view their expense ledger.</p>
+            {% elif not history %}
+                <p class="text-center" style="color: #999; padding: 2rem 0;">No expenses recorded yet.</p>
+            {% else %}
+                <div style="overflow-x: auto;">
+                    <table class="table-striped" style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #ddd; text-align: left;">
+                                <th style="padding: 10px;">Date</th>
+                                <th style="padding: 10px;">Description</th>
+                                <th style="padding: 10px; text-align: right;">Total Bill</th>
+                                <th style="padding: 10px;">Payer</th>
+                                <th style="padding: 10px;">Split</th>
+                                <th style="padding: 10px; text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for expense in history %}
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px; color: #666;">{{ expense.expense_date }}</td>
+                                <td style="padding: 10px; font-weight: 600;">{{ expense.description }}</td>
+                                <td style="padding: 10px; text-align: right; font-weight: 600;">${{ "%.2f"|format(expense.amount) }}</td>
+                                <td style="padding: 10px;">Me</td> 
+                                <td style="padding: 10px; color: #666;">Evenly ({{ expense.group_name }})</td>
+                                <td style="padding: 10px; text-align: right; white-space: nowrap;">
+                                    <a href="#" style="color: #0d6efd; text-decoration: none; margin-right: 15px;">Edit</a>
+                                    
+                                    <form action="{{ url_for('expenses.delete', expense_id=expense.expense_id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Delete this expense?')">
+                                        <button type="submit" style="background: none; border: none; color: #dc3545; padding: 0; cursor: pointer;">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<script>
+function updateHistoryView(groupId) {
+    window.location.href = "{{ url_for('expenses.index') }}?group_id=" + groupId;
+}
+</script>
+{% endblock %}

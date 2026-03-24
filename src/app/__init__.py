@@ -8,7 +8,7 @@ from src.app.routes.groups import groups
 from src.app.routes.home import home
 from src.app.routes.setup import setup
 from src.app.routes.subscriptions import subscriptions
-
+from src.app.routes.expenses import expenses
 
 def create_app():
     load_dotenv()
@@ -24,6 +24,7 @@ def create_app():
     app.register_blueprint(utilities)
     app.register_blueprint(groups)
     app.register_blueprint(subscriptions)
+    app.register_blueprint(expenses)
 
     return app
 

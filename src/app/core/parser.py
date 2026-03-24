@@ -1,6 +1,8 @@
 import time
 import fitz
 import os
+import base64
+import json
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
@@ -85,3 +87,53 @@ def get_bill_details(extracted_text):
         "Service Period": "Error", 
         "Total Amount Due": 0.0
     }
+    
+def encode_image(image_file):
+    return base64.b64encode(image_file.read()).decode('utf-8')
+
+def extract_from_receipt_image(image_file):
+    image_file.seek(0)
+    base64_image = encode_image(image_file)
+    prompt = """
+    You are an AI receipt parser. Analyze this receipt image and extract all purchased items and their exact prices.
+    Ignore tax, tip, and the grand total. 
+    
+    You must respond in strict JSON format. 
+    Return an object with a single key "items", which contains an array of objects.
+    Each object must have exactly two keys:
+    1. "Service Name" (string: the name of the item)
+    2. "Total Amount Due" (float: the price of the item)
+    """
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            response_format={ "type": "json_object" },
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{base64_image}",
+                                "detail": "high"
+                            }
+                        }
+                    ]
+                }
+            ]
+        )
+        
+        response_json = json.loads(response.choices[0].message.content)
+        items_list = response_json.get("items", [])
+        
+        for item in items_list:
+            item["Billing Month"] = "Pending" 
+            item["Service Period"] = "One-Time Charge"
+            
+        return items_list
+    except Exception as e:
+        print(f"Error processing receipt image: {e}")
+        raise e

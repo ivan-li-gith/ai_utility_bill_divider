@@ -2,7 +2,7 @@ import plotly.express as px
 import plotly.io as pio
 import pandas as pd
 from flask import Blueprint, render_template, session, redirect, url_for, request
-from src.app.database import get_user_groups, load_history, get_group_members
+from src.app.database import get_user_groups, load_history, get_group_members, get_subscription, load_expense_history
 from src.app.routes.utilities import calculate_utilities, get_member_names
 
 home = Blueprint('home', __name__)
@@ -14,115 +14,121 @@ def home_page():
     
     user_id = session["user_id"]
     user_groups = get_user_groups(user_id)
-    group_id = request.args.get('group_id', type=int) or session.get('active_group_id')
     
-    if not group_id and user_groups:
-        group_id = user_groups[0]['group_id']
+    # Get group_id from URL, or default to 0 (All)
+    group_id = request.args.get('group_id', type=int)
+    if group_id is None:
+        group_id = 0
         
-    billing_history = load_history(user_id, group_id)
+    # Load Utilities History
+    billing_history = load_history(user_id, group_id if group_id != 0 else None)
     
-    stats = {
-        "total_owed_to_you": 0.0,
-        "monthly_expense": 0.0,
-        "your_share": 0.0,
-        "current_month": "No Data"
-    }
-    
+    # Initialize variables for the Dashboard
+    debtors = []
+    total_uncollected = 0.0
+    util_total = 0.0
     donut_html = ""
-    line_html = ""  
+    line_html = "<div class='text-center' style='padding: 2rem; color: #999;'>No collection data available yet.</div>"
     
-    if not billing_history.empty and group_id:
+    # 1. Calculate Utilities Debt & History
+    if not billing_history.empty and group_id != 0:
         members = get_group_members(group_id)
         names = get_member_names(user_id, members)
         month_displays = calculate_utilities(user_id, billing_history, names, group_id)
         
         if month_displays:
             current_month = month_displays[-1]
-            stats = summary_cards(current_month, stats)
-            donut_html = donut_chart(current_month)
-            line_html = line_chart(billing_history, month_displays)
+            util_total = current_month["monthly_total"]
             
-    return render_template('home.html', stats=stats, donut_html=donut_html, line_html=line_html, groups=user_groups, selected_group_id=group_id)    
+            # Aggregate "Who Owes Me" for Utilities
+            latest_utilities = current_month["roommates"]
+            for _, row in latest_utilities.iterrows():
+                if row["Roommate Name"] != "Me" and not row["Paid"] and row["Total Owed"] > 0:
+                    owed = row["Total Owed"]
+                    debtors.append({
+                        "name": row["Roommate Name"],
+                        "utilities": owed,
+                        "subscriptions": 0.0, # Placeholder for next phase
+                        "expenses": 0.0,      # Placeholder for next phase
+                        "total_owed": owed
+                    })
+                    total_uncollected += owed
+            
+            # Generate the new Stacked Bar Chart
+            line_html = owed_vs_collected_chart(month_displays)
+            
+    # 2. Fetch Subscriptions & Expenses for the Donut Chart
+    subs = get_subscription(user_id, group_id)
+    sub_total = sum(s['amount'] for s in subs) if subs else 0.0
     
-def summary_cards(current_month, stats):
-    stats.update({
-        "current_month": current_month["month"], 
-        "monthly_expense": current_month["monthly_total"], 
-        "your_share": current_month["monthly_split"]
-    })
+    exps = load_expense_history(group_id) if group_id != 0 else []
+    exp_total = sum(e['amount'] for e in exps) if exps else 0.0
     
-    roommate_df = current_month["roommates"]
-    stats["total_owed_to_you"] = roommate_df[(roommate_df["Roommate Name"] != "Me") & (roommate_df["Paid"] == False)]["Total Owed"].sum()
-    return stats
+    # Generate the Category Donut Chart
+    donut_html = category_donut_chart(util_total, sub_total, exp_total)
+            
+    return render_template('home.html', 
+                           debtors=debtors,
+                           total_uncollected=total_uncollected,
+                           donut_html=donut_html, 
+                           line_html=line_html, 
+                           groups=user_groups, 
+                           selected_group_id=group_id)    
     
-def donut_chart(current_month):
+def category_donut_chart(util_total, sub_total, exp_total):
+    """Creates a donut chart showing the split between the three major app categories."""
+    data = [
+        {"Category": "Utilities", "Amount": util_total},
+        {"Category": "Subscriptions", "Amount": sub_total},
+        {"Category": "One-Off Expenses", "Amount": exp_total}
+    ]
+    df = pd.DataFrame(data)
+    df = df[df["Amount"] > 0] # Remove empty categories
+    
+    if df.empty:
+        return "<div class='text-center' style='padding: 2rem; color: #999;'>No spending data to visualize.</div>"
+    
     donut_fig = px.pie(
-        current_month["df"], 
-        values='Total Amount Due', 
-        names='Service Name', 
+        df, 
+        values='Amount', 
+        names='Category', 
         hole=0.4, 
-        color_discrete_sequence=px.colors.qualitative.Pastel
+        color_discrete_sequence=['#0d6efd', '#eb4f7a', '#ffc107']
     )
     
-    donut_fig.update_traces(
-        textinfo='label+percent', 
-        textposition='inside',
-        domain={'x': [0.1, 0.9], 'y': [0.1, 0.9]}   # decreases donut size
-    )
-    
-    donut_fig.update_layout(
-        margin=dict(t=0, b=0, l=0, r=0),
-        showlegend=False
-    )
+    donut_fig.update_traces(textinfo='label+percent', textposition='inside')
+    donut_fig.update_layout(margin=dict(t=0, b=0, l=0, r=0), showlegend=False)
     
     return pio.to_html(donut_fig, full_html=False, include_plotlyjs='cdn')
     
-def line_chart(billing_history, month_displays):
-    trend_data = [{"Month": month["month"], "Total Amount": month["monthly_total"], "Service": "All Services"} for month in month_displays]
-    services = billing_history["Service Name"].unique()
+def owed_vs_collected_chart(month_displays):
+    """Creates a stacked bar chart showing collection rates over time."""
+    data = []
+    for m in month_displays:
+        df = m["roommates"]
+        df_others = df[df["Roommate Name"] != "Me"]
+        
+        # Sum up what was paid vs what wasn't
+        collected = df_others[df_others["Paid"] == True]["Total Owed"].sum()
+        uncollected = df_others[df_others["Paid"] == False]["Total Owed"].sum()
+        
+        data.append({"Month": m["month"], "Amount": collected, "Status": "Collected"})
+        data.append({"Month": m["month"], "Amount": uncollected, "Status": "Uncollected"})
+        
+    trend_df = pd.DataFrame(data)
     
-    for service in services:
-        for m in month_displays:
-            # filter for specific service
-            service_amount = m["df"][m["df"]["Service Name"] == service]["Total Amount Due"].sum()
-            trend_data.append({"Month": m["month"], "Total Amount": service_amount, "Service": service})
-
-    trend_df = pd.DataFrame(trend_data)
-    line_fig = px.line(trend_df, x="Month", y="Total Amount", color="Service", markers=True)
-    line_fig.for_each_trace(lambda t: t.update(visible=True if t.name == "All Services" else "legendonly"))
-    
-    # dropdown menu
-    dropdown_buttons = [
-        dict(
-            label="All Services", 
-            method="update", 
-            args=[{"visible": [True if s == "All Services" else False for s in trend_df["Service"].unique()]}, 
-                  {"title": "Total Spending Trend"}]
-        )
-    ]
-    
-    for service in services:
-        dropdown_buttons.append(
-            dict(
-                label=service, 
-                method="update", 
-                args=[{"visible": [True if s == service else False for s in trend_df["Service"].unique()]}, 
-                      {"title": f"{service} Spending Trend"}]
-            )
-        )
-
-    line_fig.update_layout(
-        updatemenus=[
-            dict(
-                active=0, 
-                buttons=dropdown_buttons, 
-                x=0.5, y=1.15, 
-                xanchor="center", yanchor="top"
-            )
-        ],
-        margin=dict(t=50, b=20, l=20, r=20),
-        showlegend=False
+    bar_fig = px.bar(
+        trend_df, 
+        x="Month", 
+        y="Amount", 
+        color="Status", 
+        barmode="stack",
+        color_discrete_map={"Collected": "#198754", "Uncollected": "#dc3545"}
     )
     
-    return pio.to_html(line_fig, full_html=False, include_plotlyjs='cdn')
-   
+    bar_fig.update_layout(
+        margin=dict(t=20, b=20, l=20, r=20),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title=None)
+    )
+    
+    return pio.to_html(bar_fig, full_html=False, include_plotlyjs='cdn')

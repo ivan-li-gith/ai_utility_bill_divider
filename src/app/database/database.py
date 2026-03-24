@@ -85,3 +85,29 @@ def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (group_id) REFERENCES group_list(group_id)
         )"""))
+        
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS receipt_expenses (
+                expense_id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id VARCHAR(255),
+                group_id INT,
+                expense_date DATE,
+                description VARCHAR(255),
+                amount DECIMAL(10, 2),
+                payer_id VARCHAR(255),
+                split_method VARCHAR(50),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (group_id) REFERENCES group_list(group_id) ON DELETE CASCADE
+        )"""))
+        
+        # Add this inside init_db() in src/app/database/database.py
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS expense_splits (
+                split_id INT AUTO_INCREMENT PRIMARY KEY,
+                expense_id INT,
+                roommate_name VARCHAR(255),
+                amount_owed DECIMAL(10, 2),
+                is_paid BOOLEAN DEFAULT FALSE,
+                FOREIGN KEY (expense_id) REFERENCES receipt_expenses(expense_id) ON DELETE CASCADE
+            )
+        """))
