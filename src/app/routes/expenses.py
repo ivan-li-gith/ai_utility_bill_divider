@@ -5,33 +5,6 @@ from src.app.database import load_expense_history, save_new_expense, delete_expe
 
 expenses = Blueprint('expenses', __name__)
 
-@expenses.route('/expenses')
-def index():
-    if "user_id" not in session:
-        return redirect(url_for('auth.login'))
-    
-    user_id = session["user_id"]
-    user_groups = get_user_groups(user_id)
-    
-    # NEW LOGIC: Handle filtering by Group
-    default_group_id = request.args.get('group_id')
-    
-    # If no group selected, default to the first group the user has
-    if not default_group_id and user_groups:
-        default_group_id = user_groups[0]['group_id']
-        
-    # NEW LOGIC: Load the history for the table
-    # Convert default_group_id to int if it's set
-    current_history = []
-    if default_group_id:
-        current_history = load_expense_history(int(default_group_id))
-    
-    return render_template('expenses.html', 
-                           groups=user_groups, 
-                           staged_items=session.get('staged_receipt_items'),
-                           default_group_id=default_group_id,
-                           history=current_history)
-
 @expenses.route('/expenses/upload_receipt', methods=['POST'])
 def upload_receipt():
     """Handles AI vision processing for physical receipts."""

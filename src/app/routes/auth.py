@@ -4,12 +4,6 @@ from src.app.database import get_profile
 
 auth = Blueprint('auth', __name__)
 
-@auth.route('/')
-def index():
-    if "user_id" in session:
-        return redirect(url_for('dashboard.index'))
-    return redirect(url_for('auth.login_page'))
-
 @auth.route('/login', methods=['GET', 'POST'])
 def login_page():
     if request.method == 'POST':
@@ -67,12 +61,17 @@ def oauth_callback():
         try:
             response = supabase.auth.exchange_code_for_session({"auth_code": code})
             session["user_id"] = response.user.id
-            profile = get_profile(response.user.id) # Use your existing database helper
+            profile = get_profile(response.user.id) 
             
             if not profile:
+                # NEW: Capture Google data to pre-fill the setup page!
+                session['oauth_email'] = response.user.email
+                session['oauth_name'] = response.user.user_metadata.get('full_name', '')
+                
                 flash("Successfully authenticated! Please complete your profile.", "info")
                 return redirect(url_for("setup.setup_page"))
             
+            # If profile exists, they are an existing user. Skip setup!
             session["user_name"] = profile.get("display_name")
             return redirect(url_for("dashboard.index"))
         except Exception as e:

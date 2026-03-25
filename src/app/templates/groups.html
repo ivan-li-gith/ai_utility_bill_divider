@@ -103,12 +103,14 @@
                     <input type="text" name="group_name" id="modalGroupName" required>
                 </div>
                 
-                <div id="membersSection">
-                    <div class="d-flex justify-between align-center">
-                        <label>Add Members</label>
-                        <button type="button" class="btn btn-outline" id="addMemberBtn" style="width: auto; padding: 2px 10px;" onclick="addMemberRow()">+</button>
-                    </div>
-                    <div id="group-member-list-container"></div>
+                <div id="membersSection" style="margin-top: 1.5rem;">
+                    <label style="display: block; margin-bottom: 1rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem;">Group Members</label>
+                    
+                    <div id="group-member-list-container" class="vertical-stack"></div>
+                    
+                    <button type="button" class="btn btn-outline" style="width: 100%; border-style: dashed; margin-top: 1rem;" onclick="addMemberRow()">
+                        + Add New Member
+                    </button>
                 </div>
             </div>
 
@@ -117,9 +119,13 @@
                     <label>Person's Name</label>
                     <input type="text" name="new_names[]" id="modalPersonName" placeholder="e.g., April, Roommate A">
                 </div>
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label>Email (Optional)</label>
-                    <input type="email" name="new_emails[]" id="modalPersonEmail" placeholder="e.g., april@example.com">
+                    <input type="email" name="new_emails[]" id="modalPersonEmail" placeholder="april@example.com">
+                </div>
+                <div class="form-group mb-3">
+                    <label>Phone (Optional)</label>
+                    <input type="tel" name="new_phones[]" id="modalPersonPhone" placeholder="+1234567890">
                 </div>
             </div>
             
@@ -143,11 +149,18 @@ window.onclick = function(event) {
 function addMemberRow() {
     const container = document.getElementById('group-member-list-container');
     const row = document.createElement('div');
-    row.className = 'input-group mb-2 d-flex';
+    row.style.cssText = 'border: 1px solid #ddd; border-radius: 8px; position: relative; padding: 1rem; background: #fafafa; margin-bottom: 0.5rem;';
     row.innerHTML = `
-        <input type="text" name="new_names[]" placeholder="Name" required style="flex: 1;">
-        <input type="email" name="new_emails[]" placeholder="Email (Optional)" style="flex: 2;">
-        <button type="button" class="btn btn-outline" style="color: #dc3545;" onclick="this.parentElement.remove()">×</button>
+        <button type="button" style="position: absolute; top: 10px; right: 10px; color: #dc3545; font-size: 1.5rem; cursor: pointer; border: none; background: none; line-height: 1;" onclick="this.parentElement.remove()">&times;</button>
+        <div class="form-group mb-2" style="padding-right: 20px;">
+            <input type="text" name="new_names[]" placeholder="Name" required style="width: 100%;">
+        </div>
+        <div class="form-group mb-2">
+            <input type="email" name="new_emails[]" placeholder="Email (Optional)" style="width: 100%;">
+        </div>
+        <div class="form-group mb-0">
+            <input type="tel" name="new_phones[]" placeholder="Phone (Optional)" style="width: 100%;">
+        </div>
     `;
     container.appendChild(row);
 }
@@ -200,12 +213,19 @@ function openModal(mode, type, id, name, members = []) {
                 if (m.role === 'owner') return;
 
                 const row = document.createElement('div');
-                row.className = 'input-group mb-2 d-flex';
+                row.style.cssText = 'border: 1px solid #ddd; border-radius: 8px; position: relative; padding: 1rem; background: #fafafa; margin-bottom: 0.5rem;';
                 row.innerHTML = `
+                    <button type="button" style="position: absolute; top: 10px; right: 10px; color: #dc3545; font-size: 1.5rem; cursor: pointer; border: none; background: none; line-height: 1;" onclick="removeExistingMember(${m.id}, this)">&times;</button>
                     <input type="hidden" name="existing_ids[]" value="${m.id}">
-                    <input type="text" name="existing_names[]" value="${m.name}" required style="flex: 1;">
-                    <input type="email" name="existing_emails[]" value="${m.email || ''}" style="flex: 2;">
-                    <button type="button" class="btn btn-outline" style="color: #dc3545;" onclick="removeExistingMember(${m.id}, this)">×</button>
+                    <div class="form-group mb-2" style="padding-right: 20px;">
+                        <input type="text" name="existing_names[]" value="${m.name}" required style="width: 100%;">
+                    </div>
+                    <div class="form-group mb-2">
+                        <input type="email" name="existing_emails[]" value="${m.email || ''}" placeholder="Email (Optional)" style="width: 100%;">
+                    </div>
+                    <div class="form-group mb-0">
+                        <input type="tel" name="existing_phones[]" value="${m.phone || ''}" placeholder="Phone (Optional)" style="width: 100%;">
+                    </div>
                 `;
                 groupContainer.appendChild(row);
             });

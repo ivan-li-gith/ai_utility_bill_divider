@@ -9,14 +9,14 @@ def get_profile(user_id):
         result = conn.execute(query, {"uid": user_id}).fetchone()
         return result._asdict() if result else None
     
-def save_profile(user_id, name, age):
+def save_profile(user_id, name, email, phone):
     engine = get_engine()
     with engine.begin() as conn:
         conn.execute(text("""
-            INSERT INTO profiles (user_id, display_name, age)
-            VALUES (:uid, :name, :age)
-            ON DUPLICATE KEY UPDATE display_name = :name, age = :age
-        """), {"uid": user_id, "name": name, "age": age})
+            INSERT INTO profiles (user_id, display_name, email, phone)
+            VALUES (:uid, :name, :email, :phone)
+            ON DUPLICATE KEY UPDATE display_name = :name, email = :email, phone = :phone
+        """), {"uid": user_id, "name": name, "email": email, "phone": phone})
         
 def get_user_by_email(email):
     """Finds a user's ID by their email."""

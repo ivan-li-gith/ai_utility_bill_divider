@@ -25,6 +25,7 @@ def create():
     group_type = request.form.get('group_type', 'group') 
     names = request.form.getlist('new_names[]')
     emails = request.form.getlist('new_emails[]')
+    phones = request.form.getlist('new_phones[]') # NEW
     
     if group_type == 'individual' and names:
         group_name = names[0]
@@ -32,7 +33,7 @@ def create():
     if group_name:
         try:
             group_id = create_group(user_id, group_name, group_type)
-            process_members(user_id, group_id, names, emails, auto_create_individual=(group_type == 'group'))
+            process_members(user_id, group_id, names, emails, phones, auto_create_individual=(group_type == 'group')) # UPDATED
             flash(f"Group '{group_name}' created successfully!", "success")
         except Exception as e:
             flash(f"Error creating group: {e}", "danger")
@@ -49,19 +50,22 @@ def edit(group_id):
     existing_ids = request.form.getlist('existing_ids[]')
     existing_names = request.form.getlist('existing_names[]')
     existing_emails = request.form.getlist('existing_emails[]')
+    existing_phones = request.form.getlist('existing_phones[]') # NEW
     new_names = request.form.getlist('new_names[]')
     new_emails = request.form.getlist('new_emails[]')
+    new_phones = request.form.getlist('new_phones[]') # NEW
     
     if new_name:
         try:
             update_group_name(group_id, new_name)
-            for m_id, name, email in zip(existing_ids, existing_names, existing_emails):
+            for m_id, name, email, phone in zip(existing_ids, existing_names, existing_emails, existing_phones): # UPDATED
                 clean_name = name.strip()
                 clean_email = email.strip()
+                clean_phone = phone.strip()
                 if clean_name:
-                    update_member(m_id, clean_name, clean_email)
+                    update_member(m_id, clean_name, clean_email, clean_phone) # UPDATED
 
-            process_members(user_id, group_id, new_names, new_emails, auto_create_individual=True)
+            process_members(user_id, group_id, new_names, new_emails, new_phones, auto_create_individual=True) # UPDATED
             flash(f"Group '{new_name}' updated successfully!", "success")
         except Exception as e:
             flash(f"Error updating group: {e}", "danger")
@@ -95,14 +99,17 @@ def parse_members(group):
     except (json.JSONDecodeError, TypeError):
         return []
     
-def process_members(user_id, group_id, names, emails, auto_create_individual=False):
+def process_members(user_id, group_id, names, emails, phones, auto_create_individual=False):
     """Cleans and adds new members to a group, optionally ensuring they exist as individuals."""
-    for name, email in zip(names, emails):
+    # Notice we added 'phones' to the zip function below:
+    for name, email, phone in zip(names, emails, phones): 
         clean_name = name.strip()
         clean_email = email.strip() if email else ""
+        clean_phone = phone.strip() if phone else "" # Clean the phone input
         
         if clean_name:
-            add_group_member(group_id, clean_name, clean_email)
+            # Pass clean_phone into the database function
+            add_group_member(group_id, clean_name, clean_email, clean_phone) 
             if auto_create_individual:
                 ensure_individual_exists(user_id, clean_name, clean_email)
 

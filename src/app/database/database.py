@@ -27,8 +27,8 @@ def init_db():
             CREATE TABLE IF NOT EXISTS profiles (
                 user_id VARCHAR(255) PRIMARY KEY,
                 display_name VARCHAR(255),
-                age INT,
-                email VARCHAR(255)
+                email VARCHAR(255),
+                phone VARCHAR(50)
         )"""))
         
         conn.execute(text("""
@@ -46,6 +46,7 @@ def init_db():
                 group_id INT,
                 member_name VARCHAR(255),
                 member_email VARCHAR(255),
+                member_phone VARCHAR(50), 
                 user_id VARCHAR(255) NULL,
                 role VARCHAR(50) DEFAULT 'member',
                 FOREIGN KEY (group_id) REFERENCES group_list(group_id)

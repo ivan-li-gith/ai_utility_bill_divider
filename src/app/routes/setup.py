@@ -1,33 +1,29 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from src.app.database import save_profile, create_group
+from src.app.database import save_profile
 
 setup = Blueprint('setup', __name__)
 
 @setup.route('/setup')
 def setup_page():
     if "user_id" not in session:
-        return redirect(url_for('auth.login'))
-    return render_template('setup.html')
+        return redirect(url_for('auth.login_page'))
+        
+    default_name = session.pop('oauth_name', '')
+    default_email = session.pop('oauth_email', '')
+    
+    return render_template('setup.html', default_name=default_name, default_email=default_email)
 
 @setup.route('/setup/save', methods=['POST'])
 def save():
     user_id = session.get("user_id")
     display_name = request.form.get("display_name")
-    age = request.form.get("age")
-    group_name = request.form.get("group_name")
+    email = request.form.get("email", "")
+    phone = request.form.get("phone", "")
     
     try:
-        save_profile(user_id, display_name, age)
+        save_profile(user_id, display_name, email, phone)
         session["user_name"] = display_name
-        
-        if group_name:
-            group_id = create_group(user_id, group_name)
-            session["active_group_id"] = group_id
-            session["active_group_name"] = group_name
-            flash(f"Welcome, {display_name}! Your group '{group_name}' is ready.", "success")
-        else:
-            flash(f"Profile created! Welcome, {display_name}.", "success")
-            
+        flash(f"Profile created! Welcome to Split Em, {display_name}.", "success")
         return redirect(url_for('dashboard.index'))
         
     except Exception as e:

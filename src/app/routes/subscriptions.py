@@ -9,26 +9,6 @@ from src.app.database import (
 
 subscriptions = Blueprint('subscriptions', __name__)
 
-@subscriptions.route('/subscriptions')
-def index():
-    if "user_id" not in session:
-        return redirect(url_for('auth.login_page'))
-    
-    user_id = session['user_id']
-    user_groups = get_user_groups(user_id)
-    
-    group_id = request.args.get('group_id', type=int)
-    if group_id is None:
-        group_id = 0
-        
-    # 3. Correct the function call to pass both user_id and group_id
-    expenses = get_subscription(user_id, group_id)
-    
-    return render_template('subscriptions.html', 
-                           expenses=expenses, 
-                           groups=user_groups, 
-                           selected_group_id=group_id)
-
 @subscriptions.route('/subscriptions/add', methods=['POST'])
 def add():
     if "user_id" not in session:

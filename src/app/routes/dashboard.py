@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, session, redirect, url_for, request
+from flask import Blueprint, render_template, session, redirect, url_for, request, flash
 from src.app.database import get_user_groups, load_history, get_group_members, get_unpaid_expense_splits
 from src.app.routes.utilities import calculate_utilities, get_member_names
+from src.app.core.notifications import generate_pdf_breakdown, send_email_with_pdf, send_sms_summary
 
 dashboard = Blueprint('dashboard', __name__)
 
@@ -20,11 +21,22 @@ def index():
     # Dictionary to aggregate debts across all groups and categories
     debtors_dict = {}
     
+    import json
+    contact_map = {}
+    for g in user_groups:
+        members = g.get('members_json', [])
+        if isinstance(members, str): members = json.loads(members)
+        for m in (members or []):
+            if m.get('name') not in contact_map:
+                contact_map[m.get('name')] = {'email': m.get('email', ''), 'phone': m.get('phone', '')}
+
     def add_debt(name, category, amount):
         if amount <= 0: return
         if name not in debtors_dict:
+            contact = contact_map.get(name, {})
             debtors_dict[name] = {
-                'name': name, 'utilities': 0.0, 'expenses': 0.0, 'subscriptions': 0.0, 'total': 0.0
+                'name': name, 'utilities': 0.0, 'expenses': 0.0, 'subscriptions': 0.0, 'total': 0.0,
+                'email': contact.get('email', ''), 'phone': contact.get('phone', '') # NEW
             }
         debtors_dict[name][category] += amount
         debtors_dict[name]['total'] += amount
@@ -65,3 +77,40 @@ def index():
                            total_uncollected=total_uncollected,
                            groups=user_groups, 
                            selected_group_id=group_id)
+    
+@dashboard.route('/dashboard/notify', methods=['POST'])
+def send_notification():
+    if "user_id" not in session:
+        return redirect(url_for("auth.login_page"))
+
+    name = request.form.get('name')
+    total = float(request.form.get('total', 0))
+    util = float(request.form.get('utilities', 0))
+    exp = float(request.form.get('expenses', 0))
+    sub = float(request.form.get('subscriptions', 0))
+    method = request.form.get('method')
+    
+    try:
+        if method == 'email':
+            email = request.form.get('email')
+            if not email:
+                flash("Email address is required.", "danger")
+                return redirect(url_for('dashboard.index'))
+                
+            pdf_bytes = generate_pdf_breakdown(name, total, util, exp, sub)
+            send_email_with_pdf(email, name, pdf_bytes)
+            flash(f"Breakdown PDF emailed to {name} at {email}!", "success")
+            
+        elif method == 'sms':
+            phone = request.form.get('phone')
+            if not phone:
+                flash("Phone number is required.", "danger")
+                return redirect(url_for('dashboard.index'))
+                
+            send_sms_summary(phone, name, total, util, exp, sub)
+            flash(f"Text summary sent to {name} at {phone}!", "success")
+            
+    except Exception as e:
+        flash(f"Failed to send notification: {str(e)}", "danger")
+        
+    return redirect(url_for('dashboard.index'))

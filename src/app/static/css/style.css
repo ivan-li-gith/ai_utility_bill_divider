@@ -49,6 +49,13 @@ body {
 .btn-pink { background-color: #eb4f7a; color: white; width: 100%; }
 .btn-pink:hover { background-color: #d13d64; }
 .btn-outline { border: 1px solid #ccc; background: transparent; color: #666; }
+.btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background-color: #f8f9fa;
+    color: #aaa;
+    border-color: #eee;
+}
 
 /* Tables */
 table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }

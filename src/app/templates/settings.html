@@ -1,0 +1,32 @@
+{% extends "navbar_base.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px;">
+    <h2 class="mb-4">Account Settings</h2>
+    
+    <div class="card shadow" style="border-radius: 12px;">
+        <div class="card-body">
+            <form action="{{ url_for('settings.index') }}" method="POST">
+                
+                <div class="form-group mb-3">
+                    <label>Display Name</label>
+                    <input type="text" name="display_name" value="{{ profile.display_name if profile else '' }}" required>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label>Email Address</label>
+                    <input type="email" name="email" value="{{ profile.email if profile else '' }}" placeholder="email@example.com">
+                </div>
+                
+                <div class="form-group mb-4">
+                    <label>Phone Number</label>
+                    <input type="tel" name="phone" value="{{ profile.phone if profile else '' }}" placeholder="+1234567890">
+                </div>
+                
+                <button type="submit" class="btn btn-pink" style="width: 100%;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

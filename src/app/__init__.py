@@ -10,6 +10,9 @@ from src.app.routes.setup import setup
 from src.app.routes.subscriptions import subscriptions
 from src.app.routes.expenses import expenses
 from src.app.routes.activity import activity
+from src.app.routes.settings import settings
+from src.app.routes.landing import landing
+
 
 def create_app():
     load_dotenv()
@@ -27,6 +30,9 @@ def create_app():
     app.register_blueprint(subscriptions)
     app.register_blueprint(expenses)
     app.register_blueprint(activity)
+    app.register_blueprint(settings)
+    app.register_blueprint(landing)
+
 
 
     return app

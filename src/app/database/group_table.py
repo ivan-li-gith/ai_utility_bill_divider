@@ -38,6 +38,7 @@ def get_user_groups(user_id):
                        'id', gm.group_member_id,
                        'name', gm.member_name,
                        'email', gm.member_email,
+                       'phone', gm.member_phone,
                        'role', gm.role
                    )
                ) as members_json
