@@ -8,7 +8,7 @@
             
             <form action="{{ url_for('dashboard.send_notification') }}" method="POST">
                 <div class="modal-body">
-                    <p>Send a balance breakdown to <strong id="notify-display-name"></strong> for <strong class="text-danger" id="notify-display-total"></strong>?</p>
+                    <p>Send a balance breakdown to <strong id="notify-display-name"></strong> for <strong class="text-danger" id="notify-display-total"></strong>? Please note the email might be in the recipient's spam folder</p>
                     
                     <input type="hidden" name="name" id="notify-name">
                     <input type="hidden" name="email" id="notify-email">
