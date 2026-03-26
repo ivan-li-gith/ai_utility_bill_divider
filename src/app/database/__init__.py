@@ -1,4 +1,4 @@
-from .db import init_db, db_session, engine
+from .db import init_db
 from .profile_table import get_profile, save_profile, get_user_by_email
 from .group_table import create_group, get_user_groups, update_group_name, delete_group
 from .member_table import add_group_member, delete_member, update_member, get_group_members, get_group_member_names, update_and_sync_member

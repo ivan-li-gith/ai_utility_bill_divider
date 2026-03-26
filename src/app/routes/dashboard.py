@@ -4,25 +4,23 @@ from src.app.services.dashboard_service import get_dashboard_metrics
 
 dashboard = Blueprint('dashboard', __name__)
 
+# renders the dashboard with all expense history
 @dashboard.route('/dashboard')
 def index():
     if "user_id" not in session:
-        return redirect(url_for("auth.login_page"))
+        return redirect(url_for("auth.login"))
     
     user_id = session["user_id"]
     group_id = request.args.get('group_id', 0, type=int)
     debtors, total_uncollected, user_groups = get_dashboard_metrics(user_id, group_id)
             
-    return render_template('dashboard.html', 
-                           debtors=debtors,
-                           total_uncollected=total_uncollected,
-                           groups=user_groups, 
-                           selected_group_id=group_id)
-    
+    return render_template('dashboard.html', debtors=debtors, total_uncollected=total_uncollected, groups=user_groups, selected_group_id=group_id)
+
+# generates pdf and sends it via email to notify user
 @dashboard.route('/dashboard/notify', methods=['POST'])
 def send_notification():
     if "user_id" not in session:
-        return redirect(url_for("auth.login_page"))
+        return redirect(url_for("auth.login"))
 
     name = request.form.get('name')
     total = float(request.form.get('total', 0))

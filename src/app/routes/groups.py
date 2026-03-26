@@ -7,7 +7,7 @@ groups = Blueprint('groups', __name__)
 @groups.route('/groups')
 def index():
     if "user_id" not in session:
-        return redirect(url_for("auth.login_page"))
+        return redirect(url_for("auth.login"))
     
     user_groups = fetch_user_groups(session["user_id"])
     return render_template('groups.html', groups=user_groups)
@@ -15,7 +15,7 @@ def index():
 @groups.route('/groups/create', methods=['POST'])
 def create():
     if "user_id" not in session:
-        return redirect(url_for("auth.login_page"))
+        return redirect(url_for("auth.login"))
     
     try:
         group_name = add_new_group(
@@ -34,7 +34,7 @@ def create():
 @groups.route('/groups/edit/<int:group_id>', methods=['POST'])
 def edit(group_id):
     if "user_id" not in session: 
-        return redirect(url_for("auth.login_page"))
+        return redirect(url_for("auth.login"))
     
     existing_data = {
         'ids': request.form.getlist('existing_ids[]'),
@@ -72,10 +72,13 @@ def delete(group_id):
 @groups.route('/groups/members/delete/<int:member_id>', methods=['POST'])
 def remove_member(member_id):
     if "user_id" not in session:
-        return "Unauthorized", 401
+        flash("You must be logged in to perform this action.", "danger")
+        return redirect(url_for("auth.login"))
     
     try:
         delete_member(member_id)
-        return "Success", 200
+        flash("Member removed successfully.", "success")
     except Exception as e:
-        return str(e), 500
+        flash(f"Error removing member: {e}", "danger")
+        
+    return redirect(url_for('groups.index'))

@@ -1,6 +1,7 @@
 from src.app.database.db import db_session
 from src.app.database.models import Expense, ExpenseSplit, GroupMember
 
+# creates a new expense and splits it based on the group members
 def add_expense(group_id, user_id, date, item_name, amount, payer_id, split_method):
     new_expense = Expense(
         group_id=group_id, user_id=user_id, expense_date=date, 
@@ -30,6 +31,7 @@ def add_expense(group_id, user_id, date, item_name, amount, payer_id, split_meth
             
     db_session.commit()
 
+# fetches expenses for a group
 def get_expenses(group_id):
     expenses = db_session.query(Expense).filter_by(group_id=group_id).order_by(Expense.expense_date.desc()).all()
     return [{
@@ -38,13 +40,14 @@ def get_expenses(group_id):
         "payer_id": e.payer_id, "split_method": e.split_method,
         "group_name": e.group.group_name if e.group else ""
     } for e in expenses]
-        
+ 
 def delete_expense(expense_id):
     expense = db_session.query(Expense).filter_by(expense_id=expense_id).first()
     if expense:
         db_session.delete(expense) 
         db_session.commit()
-        
+ 
+# calculates total debt owed by each roommate    
 def get_unpaid_expense_splits(group_id=None):
     query = db_session.query(ExpenseSplit).join(Expense).filter(ExpenseSplit.is_paid == False)
     

@@ -9,7 +9,6 @@ body {
     color: #333;
 }
 
-/* Navigation */
 .navbar {
     background-color: #212529;
     padding: 1rem 2rem;
@@ -22,12 +21,10 @@ body {
 .nav-links a { color: rgba(255,255,255,0.7); text-decoration: none; margin-right: 1.5rem; }
 .nav-links a:hover { color: white; }
 
-/* Layout Grid */
 .container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
 .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 
-/* Cards */
 .card {
     background: white;
     border-radius: 8px;
@@ -38,13 +35,12 @@ body {
 .card-header { padding: 1rem; font-weight: bold; border-bottom: 1px solid #eee; }
 .card-body { padding: 1.5rem; }
 
-/* KPI Cards Specifics */
 .kpi { border-left: 5px solid; }
 .kpi-primary { border-color: #0d6efd; color: #0d6efd; }
 .kpi-success { border-color: #198754; color: #198754; }
 .kpi-info    { border-color: #0dcaf0; color: #0dcaf0; }
 
-/* Buttons */
+/* buttons */
 .btn { border: none; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
 .btn-pink { background-color: #eb4f7a; color: white; width: 100%; }
 .btn-pink:hover { background-color: #d13d64; }
@@ -57,26 +53,25 @@ body {
     border-color: #eee;
 }
 
-/* Tables */
+/* tables */
 table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
 th { background-color: #f9f9f9; text-align: left; padding: 12px; border-bottom: 2px solid #eee; }
 td { padding: 12px; border-bottom: 1px solid #eee; }
 input[type="text"], input[type="number"] { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; }
 
-/* Utility Spacing & Alignment */
 .text-center { text-align: center; }
 .mb-4 { margin-bottom: 1.5rem; }
 .d-flex { display: flex; }
 .justify-between { justify-content: space-between; }
 .align-center { align-items: center; }
 
-/* Alerts */
+/* alerts */
 .alert { padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
 .alert-success { background-color: #d1e7dd; color: #0f5132; border: 1px solid #badbcc; }
 .alert-danger { background-color: #f8d7da; color: #842029; border: 1px solid #f5c2c7; }
 .alert-info { background-color: #cff4fc; color: #055160; border: 1px solid #b6effb; }
 
-/* Form Layouts */
+/* form layouts */
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
 .form-group input { 
@@ -84,10 +79,10 @@ input[type="text"], input[type="number"] { width: 100%; padding: 6px; border: 1p
     padding: 0.5rem; 
     border: 1px solid #ddd; 
     border-radius: 4px; 
-    box-sizing: border-box; /* Ensures padding doesn't break width */
+    box-sizing: border-box; 
 }
 
-/* Badge */
+/* badge */
 .badge {
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
@@ -96,7 +91,7 @@ input[type="text"], input[type="number"] { width: 100%; padding: 6px; border: 1p
     color: #0d6efd;
 }
 
-/* --- Authentication Layout --- */
+/* authentication */
 .auth-container {
     display: flex;
     justify-content: center;
@@ -130,7 +125,7 @@ input[type="text"], input[type="number"] { width: 100%; padding: 6px; border: 1p
 .or-divider:not(:empty)::before { margin-right: 10px; }
 .or-divider:not(:empty)::after { margin-left: 10px; }
 
-/* --- List Group --- */
+/* list */
 .list-group {
     list-style: none;
     padding: 0;
@@ -149,7 +144,6 @@ input[type="text"], input[type="number"] { width: 100%; padding: 6px; border: 1p
 
 .list-item:last-child { border-bottom: none; }
 
-/* --- Search/Input Group --- */
 .input-group {
     display: flex;
     gap: 0.5rem;
@@ -158,7 +152,6 @@ input[type="text"], input[type="number"] { width: 100%; padding: 6px; border: 1p
 
 .input-group input { flex: 1; }
 
-/* src/app/static/css/style.css */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0;
@@ -179,7 +172,6 @@ input[type="text"], input[type="number"] { width: 100%; padding: 6px; border: 1p
 }
 
 
-/* Vertical stacking */
 .vertical-stack {
     display: flex;
     flex-direction: column;
@@ -195,10 +187,10 @@ input[type="text"], input[type="number"] { width: 100%; padding: 6px; border: 1p
     vertical-align: middle;
 }
 
-/* Small CSS Spinner */
+/* spinner */
 .spinner {
     border: 2px solid #f3f3f3;
-    border-top: 2px solid #eb4f7a; /* Using your project's pink color */
+    border-top: 2px solid #eb4f7a;
     border-radius: 50%;
     width: 14px;
     height: 14px;

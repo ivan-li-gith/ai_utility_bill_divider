@@ -1,12 +1,12 @@
-import fitz  # PyMuPDF
+import fitz
 import smtplib
+import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
-import os
 
+# creates pdf of a summary of the balances
 def generate_pdf_breakdown(name, total, util, exp, sub):
-    """Generates a PDF byte string in memory using PyMuPDF."""
     doc = fitz.open()
     page = doc.new_page()
     
@@ -22,8 +22,8 @@ def generate_pdf_breakdown(name, total, util, exp, sub):
     page.insert_text(fitz.Point(50, 50), text, fontsize=12, fontname="helv")
     return doc.write()
 
+# sends email to recipient with pdf summary breakdown
 def send_email_with_pdf(to_email, name, pdf_bytes):
-    """Sends an email with the PyMuPDF generated attachment."""
     sender_email = os.environ.get("SENDER_EMAIL") 
     sender_password = os.environ.get("SENDER_PASSWORD") 
     
@@ -31,10 +31,8 @@ def send_email_with_pdf(to_email, name, pdf_bytes):
     msg['Subject'] = "Your Split Em Balance Breakdown"
     msg['From'] = sender_email
     msg['To'] = to_email
-
     body = MIMEText(f"Hi {name},\n\nPlease find attached your expense breakdown PDF.\n\nBest,\nSplit Em")
     msg.attach(body)
-
     part = MIMEApplication(pdf_bytes, Name="Balance_Breakdown.pdf")
     part['Content-Disposition'] = 'attachment; filename="Balance_Breakdown.pdf"'
     msg.attach(part)

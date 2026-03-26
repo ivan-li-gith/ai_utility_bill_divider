@@ -4,8 +4,9 @@ from src.app.database import get_profile
 
 auth = Blueprint('auth', __name__)
 
+# authenticates user and directs them to dashboard or profile setup
 @auth.route('/login', methods=['GET', 'POST'])
-def login_page():
+def login():
     if request.method == 'POST':
         email = request.form.get("email")
         password = request.form.get("password")
@@ -24,6 +25,7 @@ def login_page():
             
     return render_template('login.html')
 
+# makes new user account and triggers email verification
 @auth.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -33,12 +35,13 @@ def signup():
         try:
             response = supabase.auth.sign_up({"email": email, "password": password})
             flash("Check your email for a confirmation link!", "info")
-            return redirect(url_for("auth.login_page"))
+            return redirect(url_for("auth.login"))
         except Exception as e:
             flash(f"Signup failed: {str(e)}", "danger")
             
     return render_template('signup.html')
 
+# triggers google authentication
 @auth.route('/login/<provider>')
 def oauth_login(provider):
     try:
@@ -64,23 +67,22 @@ def oauth_callback():
             profile = get_profile(response.user.id) 
             
             if not profile:
-                # NEW: Capture Google data to pre-fill the setup page!
                 session['oauth_email'] = response.user.email
                 session['oauth_name'] = response.user.user_metadata.get('full_name', '')
                 
                 flash("Successfully authenticated! Please complete your profile.", "info")
                 return redirect(url_for("setup.setup_page"))
             
-            # If profile exists, they are an existing user. Skip setup!
             session["user_name"] = profile.get("display_name")
             return redirect(url_for("dashboard.index"))
         except Exception as e:
             flash(f"Authentication error: {e}", "danger")
-            return redirect(url_for("auth.login_page"))
-    return "Missing authorization code", 400
+            return redirect(url_for("auth.login"))
+    flash("Authentication failed. Please try logging in again.", "danger")
+    return redirect(url_for("auth.login"))
 
 @auth.route('/logout')
 def logout():
     supabase.auth.sign_out()
     session.clear()
-    return redirect(url_for('auth.login_page'))
+    return redirect(url_for('auth.login'))

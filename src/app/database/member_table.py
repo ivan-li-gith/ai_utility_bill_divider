@@ -18,7 +18,8 @@ def update_member(member_id, name, email):
         member.member_name = name
         member.member_email = email
         db_session.commit()
-        
+
+# grabs members info
 def get_group_members(group_id):
     members = db_session.query(GroupMember).filter_by(group_id=group_id).all()
     return [{
@@ -27,10 +28,12 @@ def get_group_members(group_id):
         "user_id": m.user_id, "role": m.role
     } for m in members]
 
+# grabs members names
 def get_group_member_names(group_id):
     members = db_session.query(GroupMember.member_name).filter_by(group_id=group_id).all()
     return [m.member_name for m in members]
-    
+
+# updates members info and syncs it with the individual cards and the group cards
 def update_and_sync_member(member_id, owner_id, new_name, new_email):
     target_member = db_session.query(GroupMember).filter_by(group_member_id=member_id).first()
     if not target_member:

@@ -1,4 +1,3 @@
-import os
 from flask import g
 from werkzeug.local import LocalProxy
 from supabase.client import Client, ClientOptions

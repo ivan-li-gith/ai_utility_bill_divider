@@ -30,6 +30,7 @@ def get_utility_bills(user_id, group_id=None):
         })
     return df
 
+# deletes old records and saves new record 
 def save_utility_splits(user_id, df, month, group_id):
     db_session.query(UtilitySplit).filter_by(billing_month=month, user_id=user_id, group_id=group_id).delete()
     db_session.commit()
@@ -47,7 +48,8 @@ def save_utility_splits(user_id, df, month, group_id):
     
     cols = ["user_id", "group_id", "billing_month", "roommate_name", "current_month_split", "rollover_amount", "total_owed", "is_paid"]
     df_mapped[cols].to_sql("utility_splits", engine, if_exists="append", index=False)
-    
+
+# tells us who has paid
 def get_utility_split_status(user_id, month, group_id):
     splits = db_session.query(UtilitySplit).filter_by(billing_month=month, user_id=user_id, group_id=group_id).all()
     return {split.roommate_name: split.is_paid for split in splits}

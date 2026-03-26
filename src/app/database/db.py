@@ -1,4 +1,3 @@
-import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 from dotenv import load_dotenv
@@ -10,6 +9,6 @@ connection_string = f"mysql+pymysql://{Config.DB_USER}:{Config.DB_PASS}@{Config.
 engine = create_engine(connection_string, pool_pre_ping=True)
 db_session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 
-# makes all tables defined in models
+# looks at all the models defined and creates the tables in db
 def init_db():
     Base.metadata.create_all(bind=engine)

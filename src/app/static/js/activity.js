@@ -1,6 +1,5 @@
-// src/app/static/js/activity.js
+// async payment updates
 document.addEventListener('DOMContentLoaded', function() {
-    // --- Existing Checkbox Logic ---
     document.querySelectorAll('.paid-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', function() {
             const form = this.closest('form');
@@ -8,14 +7,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const month = this.dataset.month;
             const name = this.dataset.name;
             
-            // Show loading spinner
+            // loading spinner
             const statusIcon = document.getElementById(`status-${month}-${name}`);
             if (statusIcon) {
                 statusIcon.innerHTML = '<div class="spinner-border spinner-border-sm text-primary" role="status"></div>';
             }
             
             formData.append('target_name', name);
-
             fetch(form.action, { 
                 method: 'POST', 
                 body: formData,
@@ -24,13 +22,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    // Show success checkmark
+                    // success checkmark
                     if (statusIcon) {
                         statusIcon.innerHTML = '<span class="text-success fw-bold">✓</span>';
                         setTimeout(() => { statusIcon.innerHTML = ''; }, 2000);
                     }
                     
-                    // Update the cascading totals on the page dynamically
+                    // updates the totals
                     for (const [monthName, roommates] of Object.entries(data.updates)) {
                         for (const [roommateName, values] of Object.entries(roommates)) {
                             const totalElement = document.getElementById(`total-owed-${monthName}-${roommateName}`);
@@ -52,9 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// --- UI Toggle Functions ---
-
-// Handles expanding and collapsing the ledger tables
+// expanding and collapsing the tables
 function toggleSection(headerElement) {
     const content = headerElement.nextElementSibling;
     const icon = headerElement.querySelector('.caret-icon');
@@ -68,9 +64,7 @@ function toggleSection(headerElement) {
     }
 }
 
-// --- MISSING JS REMOVED: openUnifiedModal is no longer needed ---
-
-// Adds a new blank row to the AI receipt staging modal
+// adds a new row to the AI receipt staging modal
 function addReceiptItemRow() {
     const tbody = document.getElementById('receiptItemsBody');
     const countInput = document.getElementById('receiptItemCount');
@@ -89,7 +83,6 @@ function addReceiptItemRow() {
     countInput.value = currentIndex + 1;
 }
 
-// Shows loading state when saving staged utility bills
 function handleSaveHistory(event) {
     const btn = event.target.querySelector('button[type="submit"]');
     if (btn) {

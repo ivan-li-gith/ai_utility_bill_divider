@@ -6,14 +6,13 @@ settings = Blueprint('settings', __name__)
 @settings.route('/settings', methods=['GET', 'POST'])
 def index():
     if "user_id" not in session:
-        return redirect(url_for('auth.login_page'))
+        return redirect(url_for('auth.login'))
     
     user_id = session['user_id']
     
     if request.method == 'POST':
         name = request.form.get('display_name')
         email = request.form.get('email', '')
-        # phone removal
         
         try:
             save_profile(user_id, name, email)

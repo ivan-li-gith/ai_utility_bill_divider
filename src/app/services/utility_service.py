@@ -2,8 +2,8 @@ import pandas as pd
 from src.app.core.parser import extract_from_pdf, get_bill_details
 from src.app.database import get_group_members, save_utility_bills, get_utility_bills, save_utility_splits, get_utility_split_status
 
+# extracts info from pdfs
 def process_uploaded_bills(files):
-    """Parses uploaded PDFs and extracts billing data."""
     all_bill_data = []
     errors = []
     
@@ -18,8 +18,8 @@ def process_uploaded_bills(files):
                 
     return all_bill_data, errors
 
+# the review part of the pdf scan before saving
 def format_and_save_bills(user_id, group_id, bill_count, form_data):
-    """Validates and saves staged bills from the UI."""
     corrected_data = []
     
     for i in range(bill_count):
@@ -41,12 +41,12 @@ def format_and_save_bills(user_id, group_id, bill_count, form_data):
         return True
     return False
 
+# adds me to the list of roommate names
 def get_member_names(user_id, members):
-    """Helper to cleanly label the current user as 'Me'."""
     return ["Me" if str(m.get("user_id")) == str(user_id) else m["member_name"] for m in members]
 
+# recalculates all the balances when user marks something as paid
 def process_status_update(user_id, group_id, month, form_data):
-    """Updates the paid status of roommates and recalculates rollovers."""
     members = get_group_members(group_id)
     names = get_member_names(user_id, members)
     
@@ -68,7 +68,6 @@ def process_status_update(user_id, group_id, month, form_data):
     df = pd.DataFrame(updated_rows)
     save_utility_splits(user_id, df, month, group_id)
     
-    # Recalculate to get the updated cascading totals
     billing_history = get_utility_bills(user_id, group_id)
     updated_months = calculate_utilities(user_id, billing_history, names, group_id)
     
@@ -84,8 +83,8 @@ def process_status_update(user_id, group_id, month, form_data):
         }
     return all_updates
 
+# calculates monthly utility splits
 def calculate_utilities(user_id, billing_history, names, group_id):
-    """Takes billing history dataframe and calculates cascading rollovers per roommate."""
     unique_months = billing_history["Billing Month"].unique()
     months_ascending = sorted(unique_months, key=lambda d: pd.to_datetime(d, format='%B %Y'))
     running_rollover = {name: 0.0 for name in names}

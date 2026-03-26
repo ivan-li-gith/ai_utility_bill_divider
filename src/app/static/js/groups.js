@@ -1,12 +1,9 @@
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // --- UTILITY: Generate a Member Row HTML String ---
     function createMemberRow(isExisting = false, id = '', name = '', email = '', role = 'member') {
         const prefix = isExisting ? 'existing' : 'new';
         const disabledAttr = role === 'owner' ? 'readonly' : '';
         const idInput = isExisting ? `<input type="hidden" name="existing_ids[]" value="${id}">` : '';
         
-        // Remove button is only available for non-owners
         const removeBtn = role !== 'owner' 
             ? `<button type="button" class="btn btn-outline-danger w-100" onclick="this.closest('.row').remove()">X</button>`
             : `<div class="text-muted small mt-2 text-center">Owner</div>`;
@@ -27,12 +24,12 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
 
-    // --- ADD MODAL LOGIC ---
+    // the add buttons inside the group and individual creation
     const addModal = document.getElementById('addGroupModal');
     if (addModal) {
         addModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
-            const type = button.getAttribute('data-type'); // 'group' or 'individual'
+            const type = button.getAttribute('data-type');
             
             document.getElementById('add-group-type').value = type;
             const title = document.getElementById('addGroupModalLabel');
@@ -41,25 +38,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const membersContainer = document.getElementById('add-members-container');
             const addRowBtn = document.getElementById('btn-add-member-row');
 
-            // Reset form
+            // reset form
             membersContainer.innerHTML = '';
             
             if (type === 'individual') {
                 title.textContent = 'Add Individual';
                 nameContainer.style.display = 'none';
                 nameInput.removeAttribute('required');
-                addRowBtn.style.display = 'none'; // Only allow 1 row for individuals
-                
-                // Add exactly one blank row
+                addRowBtn.style.display = 'none';
                 membersContainer.innerHTML = createMemberRow(false);
             } else {
                 title.textContent = 'Create Group';
                 nameContainer.style.display = 'block';
                 nameInput.setAttribute('required', 'required');
                 addRowBtn.style.display = 'block';
-                
-                // Add two blank rows to start a group
-                membersContainer.innerHTML = createMemberRow(false) + createMemberRow(false);
+                membersContainer.innerHTML = createMemberRow(false);
             }
         });
 
@@ -67,20 +60,20 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('add-members-container').insertAdjacentHTML('beforeend', createMemberRow(false));
         });
     }
-
-    // --- EDIT MODAL LOGIC ---
+ 
+    // edits the member info
     const editModal = document.getElementById('editGroupModal');
     if (editModal) {
         editModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
             
-            // 1. Extract Data
+            // extract data
             const groupId = button.getAttribute('data-group-id');
             const groupName = button.getAttribute('data-group-name');
             const groupType = button.getAttribute('data-group-type');
             const membersData = JSON.parse(button.getAttribute('data-members') || '[]');
             
-            // 2. Setup Form & Basic Inputs
+            // setup form
             document.getElementById('edit-group-form').action = `/groups/edit/${groupId}`;
             document.getElementById('edit-group-type').value = groupType;
             
@@ -100,20 +93,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 newMembersTitle.style.display = 'block';
             }
 
-            // 3. Populate Existing Members
             const existingContainer = document.getElementById('edit-existing-members-container');
             existingContainer.innerHTML = '';
             
             membersData.forEach(member => {
-                // If it's an individual, we hide the owner row because an individual card is just 1 person
                 if (groupType === 'individual' && member.role === 'owner') return;
-                
                 existingContainer.insertAdjacentHTML('beforeend', createMemberRow(
                     true, member.id, member.name, member.email, member.role
                 ));
             });
 
-            // 4. Clear New Members Container
             document.getElementById('edit-new-members-container').innerHTML = '';
         });
 

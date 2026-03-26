@@ -1,6 +1,7 @@
 from src.app.database.db import db_session
 from src.app.database.models import Group, GroupMember, Profile
 
+# creates new group and adds the creator as the owner
 def create_group(owner_id, group_name, group_type='group'):
     new_group = Group(group_name=group_name, owner_id=owner_id, group_type=group_type)
     db_session.add(new_group)
@@ -21,6 +22,7 @@ def create_group(owner_id, group_name, group_type='group'):
     
     return new_group.group_id
 
+# fetches the groups and compiles a list of the members
 def get_user_groups(user_id):
     groups = db_session.query(Group).join(Group.members).filter(
         (Group.owner_id == user_id) | (GroupMember.user_id == user_id)

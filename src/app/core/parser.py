@@ -10,7 +10,7 @@ from config import Config
 openai.api_key = Config.OPENAI_API_KEY
 client = OpenAI(api_key=Config.OPENAI_API_KEY)
 
-# model for the ai output
+# model for the ai
 class UtilityBill(BaseModel):
     service_name: str = Field(description="The generic utility category. Use standard types: 'Electric', 'Gas', 'Water', 'Internet', 'Trash', or 'Sewer'. NEVER include company names like PG&E or Spectrum.")
     service_period: str = Field(description="The billing cycle dates formatted strictly as 'MM-DD-YYYY to MM-DD-YYYY'.")
@@ -92,6 +92,7 @@ def get_bill_details(extracted_text):
 def encode_image(image_file):
     return base64.b64encode(image_file.read()).decode('utf-8')
 
+# image for ai to extract info from the receipts
 def extract_from_receipt_image(image_file):
     image_file.seek(0)
     base64_image = encode_image(image_file)
