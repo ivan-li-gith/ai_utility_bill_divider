@@ -1,5 +1,5 @@
 import json
-from src.app.database import get_user_groups, create_group, add_group_member, get_group_members, update_group_name, update_and_sync_member
+from src.app.database import get_user_groups, create_group, add_group_member, get_group_members, update_group_name, update_and_sync_member, delete_member
 
 # grabs member data and converts from json strings to list
 def fetch_user_groups(user_id):
@@ -42,12 +42,21 @@ def modify_group(user_id, group_id, group_type, new_name, existing_data, new_dat
         if new_name:
             update_group_name(group_id, new_name)
             
-            for m_id, name, email in zip(existing_data['ids'], existing_data['names'], existing_data['emails']):
-                clean_name = name.strip()
-                if clean_name:
-                    update_and_sync_member(m_id, user_id, clean_name, email.strip())
-                    
-            process_members(user_id, group_id, new_data['names'], new_data['emails'], auto_create_individual=True)
+        current_members = get_group_members(group_id)
+        submitted_ids = [str(i) for i in existing_data['ids']]
+        
+        for member in current_members:
+            m_id_str = str(member['group_member_id'])
+            # If a member is not the owner and is missing from the submitted list, delete them
+            if member['role'] != 'owner' and m_id_str not in submitted_ids:
+                delete_member(member['group_member_id'])
+                
+        for m_id, name, email in zip(existing_data['ids'], existing_data['names'], existing_data['emails']):
+            clean_name = name.strip()
+            if clean_name:
+                update_and_sync_member(m_id, user_id, clean_name, email.strip())
+                
+        process_members(user_id, group_id, new_data['names'], new_data['emails'], auto_create_individual=True)
 
 # adds members to group and creates individual cards for them
 def process_members(user_id, group_id, names, emails, auto_create_individual=False):
