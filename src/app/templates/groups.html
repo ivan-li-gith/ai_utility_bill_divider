@@ -1,331 +1,80 @@
 {% extends "navbar_base.html" %}
+
 {% block content %}
-<div class="container" style="max-width: 800px;">
+<div class="container mt-4">
     
-    <div class="d-flex justify-between align-center mb-4">
-        <h2>My Groups</h2>
-        <button class="btn btn-pink" style="width: auto;" onclick="openModal('create', 'group')">+ New Group</button>
-    </div>
-
-    <div class="vertical-stack mb-5" style="margin-bottom: 3rem;">
-        {% for group in groups if group.group_type == 'group' %}
-        <div class="card mb-2" style="border: 1px solid #eee; border-radius: 12px;">
-            <div class="card-body d-flex justify-between align-center" style="padding: 1.25rem;">
-                
-                <div>
-                    <h3 style="margin: 0 0 0.25rem 0;">{{ group.group_name }}</h3>
-                    <p style="color: #666; font-size: 0.9rem; margin: 0;">
-                        <strong>Members:</strong> 
-                        {% for member in group.members if member.role != 'owner' %}
-                            {{ member.name }}{% if not loop.last %}, {% endif %}
-                        {% else %}
-                            No other members
-                        {% endfor %}
-                    </p>
-                </div>
-
-                <div class="d-flex align-center" style="gap: 1.25rem;">
-                    <a href="#" 
-                       style="color: #0d6efd; text-decoration: none; font-weight: 600; font-size: 0.9rem;"
-                       onclick="openModal('edit', 'group', '{{ group.group_id }}', '{{ group.group_name }}', {{ group.members | tojson | forceescape }})">
-                       Edit
-                    </a>
-
-                    <form action="{{ url_for('groups.delete', group_id=group.group_id) }}" 
-                          method="POST" 
-                          onsubmit="return confirm('Delete group?')"
-                          style="margin: 0;">
-                        <button type="submit" 
-                                style="background: none; border: none; color: #dc3545; font-weight: 600; font-size: 0.9rem; cursor: pointer; padding: 0;">
-                            Delete
-                        </button>
-                    </form>
-                </div>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Groups & Individuals</h2>
+        <div>
+            <button class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#addGroupModal" data-type="individual">
+                + Add Individual
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal" data-type="group">
+                + Create Group
+            </button>
         </div>
-        {% else %}
-            <p class="text-center" style="color: #999;">No groups created yet.</p>
-        {% endfor %}
     </div>
 
-    <div class="d-flex justify-between align-center mb-4">
-        <h2>Individuals</h2>
-        <button class="btn btn-pink" style="width: auto;" onclick="openModal('create', 'individual')">+ New Individual</button>
-    </div>
-
-    <div class="vertical-stack">
-        {% for group in groups if group.group_type == 'individual' %}
-        <div class="card mb-2" style="border: 1px solid #eee; border-radius: 12px;">
-            <div class="card-body d-flex justify-between align-center" style="padding: 1.25rem;">
-                
-                <div>
-                    <h3 style="margin: 0 0 0.25rem 0;">{{ group.group_name }}</h3>
-                    {% for member in group.members if member.role != 'owner' %}
-                        <p style="color: #666; font-size: 0.9rem; margin: 0;">Email: {{ member.email if member.email else 'None' }}</p>
-                        <p style="color: #666; font-size: 0.9rem; margin: 0;">
-                            Phone: 
-                            {% if member.phone %}
-                                {{ member.phone }}
-                            {% else %}
-                                <span style="font-style: italic; color: #aaa; font-size: 0.85rem;">Click edit to add number</span>
+    <div class="row">
+        {% if groups %}
+            {% for group in groups %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 text-truncate">
+                            {{ group.group_name }} 
+                            {% if group.group_type == 'individual' %}
+                                <span class="badge bg-secondary ms-2" style="font-size: 0.6em;">Individual</span>
                             {% endif %}
-                        </p>
-                    {% endfor %}
-                </div>
-
-                <div class="d-flex align-center" style="gap: 1.25rem;">
-                    <a href="#" 
-                       style="color: #0d6efd; text-decoration: none; font-weight: 600; font-size: 0.9rem;"
-                       onclick="openModal('edit', 'individual', '{{ group.group_id }}', '{{ group.group_name }}', {{ group.members | tojson | forceescape }})">
-                       Edit
-                    </a>
-
-                    <form action="{{ url_for('groups.delete', group_id=group.group_id) }}" 
-                          method="POST" 
-                          onsubmit="return confirm('Remove individual?')"
-                          style="margin: 0;">
-                        <button type="submit" 
-                                style="background: none; border: none; color: #dc3545; font-weight: 600; font-size: 0.9rem; cursor: pointer; padding: 0;">
-                            Delete
+                        </h5>
+                    </div>
+                    
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush mb-3">
+                            {% for member in group.members %}
+                                <li class="list-group-item px-0 py-1 border-0 text-truncate">
+                                    <i class="bi bi-person-fill text-muted me-2"></i> 
+                                    {{ member.name }}
+                                    {% if member.role == 'owner' %}
+                                        <span class="badge bg-primary rounded-pill ms-1" style="font-size: 0.6em;">You</span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    <div class="card-footer bg-white border-top-0 d-flex justify-content-between">
+                        <button class="btn btn-sm btn-outline-secondary" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#editGroupModal"
+                                data-group-id="{{ group.group_id }}"
+                                data-group-name="{{ group.group_name }}"
+                                data-group-type="{{ group.group_type }}"
+                                data-members="{{ group.members | tojson | forceescape }}">
+                            Edit
                         </button>
-                    </form>
+
+                        {% if group.owner_id == session['user_id'] %}
+                        <form action="{{ url_for('groups.delete', group_id=group.group_id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this?');">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
+            {% endfor %}
         {% else %}
-            <p class="text-center" style="color: #999;">No individuals added yet.</p>
-        {% endfor %}
+            <div class="col-12 text-center text-muted mt-5">
+                <p class="fs-4">You haven't added anyone yet.</p>
+                <p>Add roommates, friends, or create groups to start splitting bills!</p>
+            </div>
+        {% endif %}
     </div>
 </div>
 
-<div id="groupModal" class="modal-overlay" style="display: none;">
-    <div class="auth-card" style="max-width: 500px; position: relative;">
-        <span class="close-btn" onclick="closeModal()">&times;</span>
-        <h3 id="modalTitle">Create New Group</h3>
-        <form id="groupForm" method="POST">
-            <input type="hidden" name="group_type" id="modalGroupType" value="group">
-            
-            <div id="groupInputView">
-                <div class="form-group">
-                    <label>Group Name</label>
-                    <input type="text" name="group_name" id="modalGroupName" required>
-                </div>
-                
-                <div id="membersSection" style="margin-top: 1.5rem;">
-                    <label style="display: block; margin-bottom: 1rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem;">Group Members</label>
-                    
-                    <div id="group-member-list-container" class="vertical-stack"></div>
-                    
-                    <button type="button" class="btn btn-outline" style="width: 100%; border-style: dashed; margin-top: 1rem;" onclick="addMemberRow()">
-                        + Add New Member
-                    </button>
-                </div>
-            </div>
+{% include 'components/modals/add_group_modal.html' %}
+{% include 'components/modals/edit_group_modal.html' %}
 
-            <div id="personInputView" style="display: none;">
-                <div class="form-group mb-3">
-                    <label>Person's Name</label>
-                    <input type="text" name="new_names[]" id="modalPersonName" placeholder="e.g., April, Roommate A">
-                </div>
-                <div class="form-group mb-3">
-                    <label>Email (Optional)</label>
-                    <input type="email" name="new_emails[]" id="modalPersonEmail" placeholder="april@example.com">
-                </div>
-                <div class="form-group mb-3">
-                    <label>Phone (Optional)</label>
-                    <input type="tel" name="new_phones[]" id="modalPersonPhone" placeholder="+1234567890">
-                </div>
-            </div>
-            
-            <button type="submit" class="btn btn-pink" id="submitBtn" style="margin-top: 1rem;">Save</button>
-        </form>
-    </div>
-</div>
+<script src="{{ url_for('static', filename='js/groups.js') }}"></script>
 
-<script>
-const existingIndividuals = [
-    {% for group in groups if group.group_type == 'individual' %}
-        {% for member in group.members if member.role != 'owner' %}
-        {
-            name: "{{ member.name | replace('\"', '\\\"') }}",
-            email: "{{ member.email if member.email else '' }}",
-            phone: "{{ member.phone if member.phone else '' }}"
-        },
-        {% endfor %}
-    {% endfor %}
-];
-    
-function closeModal() {
-    document.getElementById('groupModal').style.display = 'none';
-}
-
-window.onclick = function(event) {
-    const modal = document.getElementById('groupModal');
-    if (event.target == modal) {
-        closeModal();
-    }
-}
-
-function addMemberRow() {
-    const container = document.getElementById('group-member-list-container');
-    const row = document.createElement('div');
-    
-    // NEW UI: Clean white card, subtle shadow, better padding
-    row.style.cssText = 'border: 1px solid #e0e0e0; border-radius: 8px; position: relative; padding: 1.25rem; background: #fff; margin-bottom: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);';
-    
-    let optionsHtml = '<option value="">+ Create New / Manual Entry</option>';
-    existingIndividuals.forEach((ind, index) => {
-        optionsHtml += `<option value="${index}">${ind.name}</option>`;
-    });
-
-    const uniqueId = Date.now() + Math.random().toString(36).substr(2, 9);
-
-    row.innerHTML = `
-        <button type="button" style="position: absolute; top: 12px; right: 12px; color: #aaa; font-size: 1.2rem; cursor: pointer; border: none; background: none; transition: color 0.2s;" onmouseover="this.style.color='#dc3545'" onmouseout="this.style.color='#aaa'" onclick="this.parentElement.remove()">✖</button>
-        
-        ${existingIndividuals.length > 0 ? `
-        <div class="form-group mb-3" style="padding-right: 20px;">
-            <label style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #888; margin-bottom: 6px;">Select Individual</label>
-            <select class="form-control" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; background: #f8f9fa; font-weight: 500;" onchange="populateMemberData(this, '${uniqueId}')">
-                ${optionsHtml}
-            </select>
-        </div>
-        ` : ''}
-
-        <div style="${existingIndividuals.length > 0 ? 'border-top: 1px dashed #eee; padding-top: 1rem;' : ''}">
-            <div class="form-group mb-2" style="padding-right: ${existingIndividuals.length > 0 ? '0' : '20px'};">
-                <input type="text" id="name_${uniqueId}" name="new_names[]" placeholder="Full Name (Required)" required style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
-            </div>
-            
-            <div class="grid-2" style="gap: 0.75rem;">
-                <div class="form-group mb-0">
-                    <input type="email" id="email_${uniqueId}" name="new_emails[]" placeholder="Email (Optional)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
-                </div>
-                <div class="form-group mb-0">
-                    <input type="tel" id="phone_${uniqueId}" name="new_phones[]" placeholder="Phone (Optional)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
-                </div>
-            </div>
-        </div>
-    `;
-    container.appendChild(row);
-}
-
-function populateMemberData(selectElement, uniqueId) {
-    const nameInput = document.getElementById(`name_${uniqueId}`);
-    const emailInput = document.getElementById(`email_${uniqueId}`);
-    const phoneInput = document.getElementById(`phone_${uniqueId}`);
-
-    if (selectElement.value !== "") {
-        const ind = existingIndividuals[selectElement.value];
-        nameInput.value = ind.name;
-        emailInput.value = ind.email;
-        phoneInput.value = ind.phone;
-    } else {
-        nameInput.value = "";
-        emailInput.value = "";
-        phoneInput.value = "";
-    }
-}
-
-function openModal(mode, type, id, name, members = []) {
-    const modal = document.getElementById('groupModal');
-    const title = document.getElementById('modalTitle');
-    const form = document.getElementById('groupForm');
-    const typeInput = document.getElementById('modalGroupType');
-    
-    const groupView = document.getElementById('groupInputView');
-    const personView = document.getElementById('personInputView');
-    
-    const groupNameInput = document.getElementById('modalGroupName');
-    const personNameInput = document.getElementById('modalPersonName');
-    const personEmailInput = document.getElementById('modalPersonEmail');
-    
-    const groupContainer = document.getElementById('group-member-list-container');
-    const submitBtn = document.getElementById('submitBtn');
-    
-    groupContainer.innerHTML = ''; 
-    typeInput.value = type;
-
-    if (type === 'individual') {
-        title.innerText = (mode === 'create') ? "Add Individual" : "Edit Individual";
-        groupView.style.display = 'none';
-        personView.style.display = 'block';
-        groupNameInput.required = false;
-        personNameInput.required = true;
-    } else {
-        title.innerText = (mode === 'create') ? "Create New Group" : "Edit Group";
-        groupView.style.display = 'block';
-        personView.style.display = 'none';
-        groupNameInput.required = true;
-        personNameInput.required = false;
-    }
-
-    if (mode === 'edit') {
-        submitBtn.innerText = "Save Changes";
-        form.action = `/groups/edit/${id}`;
-        
-        if (type === 'individual') {
-            personNameInput.value = name;
-            const individual = members.find(m => m.role !== 'owner');
-            personEmailInput.value = individual ? (individual.email || '') : '';
-
-            const personPhoneInput = document.getElementById('modalPersonPhone');
-            if (personPhoneInput) {
-                personPhoneInput.value = individual ? (individual.phone || '') : '';
-            }
-        } else {
-            groupNameInput.value = name;
-            members.forEach(m => {
-                // SKIP THE OWNER ROW
-                if (m.role === 'owner') return;
-
-                const row = document.createElement('div');
-                
-                // NEW UI: Match the clean white card styling
-                row.style.cssText = 'border: 1px solid #e0e0e0; border-radius: 8px; position: relative; padding: 1.25rem; background: #fff; margin-bottom: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02);';
-                
-                row.innerHTML = `
-                    <button type="button" style="position: absolute; top: 12px; right: 12px; color: #aaa; font-size: 1.2rem; cursor: pointer; border: none; background: none; transition: color 0.2s;" onmouseover="this.style.color='#dc3545'" onmouseout="this.style.color='#aaa'" onclick="removeExistingMember(${m.id}, this)">✖</button>
-                    <input type="hidden" name="existing_ids[]" value="${m.id}">
-                    
-                    <div class="form-group mb-2" style="padding-right: 20px;">
-                        <input type="text" name="existing_names[]" value="${m.name}" placeholder="Full Name (Required)" required style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
-                    </div>
-                    
-                    <div class="grid-2" style="gap: 0.75rem;">
-                        <div class="form-group mb-0">
-                            <input type="email" name="existing_emails[]" value="${m.email || ''}" placeholder="Email (Optional)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
-                        </div>
-                        <div class="form-group mb-0">
-                            <input type="tel" name="existing_phones[]" value="${m.phone || ''}" placeholder="Phone (Optional)" style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ddd;">
-                        </div>
-                    </div>
-                `;
-                groupContainer.appendChild(row);
-            });
-        }
-    } else {
-        submitBtn.innerText = "Create";
-        form.action = "{{ url_for('groups.create') }}";
-        form.reset();
-        if (type === 'group') {
-            addMemberRow();
-        }
-    }
-    modal.style.display = 'flex';
-}
-
-function removeExistingMember(memberId, btnElement) {
-    if (confirm("Remove this member from the group?")) {
-        fetch(`/groups/members/delete/${memberId}`, { method: 'POST' })
-            .then(response => {
-                if (response.ok) {
-                    btnElement.parentElement.remove();
-                } else {
-                    alert("Failed to remove member.");
-                }
-            });
-    }
-}
-</script>
 {% endblock %}

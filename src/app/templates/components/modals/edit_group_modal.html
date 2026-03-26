@@ -1,0 +1,39 @@
+<div class="modal fade" id="editGroupModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-group-form" method="POST">
+                    
+                    <input type="hidden" name="group_type" id="edit-group-type">
+
+                    <div class="mb-3" id="edit-group-name-container">
+                        <label class="form-label">Group Name</label>
+                        <input type="text" class="form-control" name="group_name" id="edit-group-name">
+                    </div>
+
+                    <hr>
+                    <h6 class="mb-3">Current Members</h6>
+                    
+                    <div id="edit-existing-members-container"></div>
+
+                    <h6 class="mt-4 mb-3" id="edit-new-members-title">Add New Members</h6>
+                    
+                    <div id="edit-new-members-container"></div>
+
+                    <button type="button" class="btn btn-sm btn-outline-secondary mb-3" id="btn-edit-add-row">
+                        + Add New Member
+                    </button>
+
+                    <div class="modal-footer px-0 pb-0 mt-3 border-top pt-3">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

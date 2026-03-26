@@ -1,53 +1,53 @@
 import pandas as pd
 from sqlalchemy import text
-from .database import get_engine
+from src.app.database.db import db_session, engine
+from src.app.database.models import UtilitySplit
 
-def save_bill_history(user_id, df):
-    engine = get_engine()
-    df_to_save = df.copy()
-    df_to_save["user_id"] = user_id
-    df_to_save.to_sql("bill_history", engine, if_exists="append", index=False)
+def save_utility_bills(user_id, df):
+    df_mapped = df.rename(columns={
+        "Billing Month": "billing_month",
+        "Service Name": "service_name",
+        "Service Period": "service_period",
+        "Total Amount Due": "total_amount_due"
+    })
+    df_mapped["user_id"] = user_id
+    df_mapped.to_sql("utility_bills", engine, if_exists="append", index=False)
 
-def load_history(user_id, group_id=None):
-    """Fetches bill history, explicitly filtered by group."""
-    engine = get_engine()
+def get_utility_bills(user_id, group_id=None):
     if group_id:
-        query = text("SELECT * FROM bill_history WHERE user_id = :uid AND group_id = :gid")
-        return pd.read_sql(query, engine, params={"uid": user_id, "gid": group_id})
+        query = text("SELECT * FROM utility_bills WHERE user_id = :uid AND group_id = :gid")
+        df = pd.read_sql(query, engine, params={"uid": user_id, "gid": group_id})
     else:
-        query = text("SELECT * FROM bill_history WHERE user_id = :uid")
-        return pd.read_sql(query, engine, params={"uid": user_id})
+        query = text("SELECT * FROM utility_bills WHERE user_id = :uid")
+        df = pd.read_sql(query, engine, params={"uid": user_id})
+        
+    if not df.empty:
+        df = df.rename(columns={
+            "billing_month": "Billing Month",
+            "service_name": "Service Name",
+            "service_period": "Service Period",
+            "total_amount_due": "Total Amount Due"
+        })
+    return df
 
-def save_tracker(user_id, df, month, group_id):
-    """Saves payment status for a specific group and month."""
-    engine = get_engine()
-    with engine.begin() as conn:
-        conn.execute(text("""
-            DELETE FROM payment_tracker 
-            WHERE `Billing Month` = :month AND user_id = :uid AND group_id = :gid
-        """), {"month": month, "uid": user_id, "gid": group_id})
+def save_utility_splits(user_id, df, month, group_id):
+    db_session.query(UtilitySplit).filter_by(billing_month=month, user_id=user_id, group_id=group_id).delete()
+    db_session.commit()
     
-    df_to_save = df.copy()
-    df_to_save["Billing Month"] = month
-    df_to_save["user_id"] = user_id
-    df_to_save["group_id"] = group_id
+    df_mapped = df.rename(columns={
+        "Roommate Name": "roommate_name",
+        "Current Month Split": "current_month_split",
+        "Rollover Amount": "rollover_amount",
+        "Total Owed": "total_owed",
+        "Paid": "is_paid"
+    })
+    df_mapped["billing_month"] = month
+    df_mapped["user_id"] = user_id
+    df_mapped["group_id"] = group_id
     
-    cols = ["user_id", "group_id", "Billing Month", "Roommate Name", "Current Month Split", "Rollover Amount", "Total Owed", "Paid"]
-    df_to_save[cols].to_sql("payment_tracker", engine, if_exists="append", index=False)
+    cols = ["user_id", "group_id", "billing_month", "roommate_name", "current_month_split", "rollover_amount", "total_owed", "is_paid"]
+    df_mapped[cols].to_sql("utility_splits", engine, if_exists="append", index=False)
     
-def get_paid_status(user_id, month, group_id):
-    """Fetches paid status for a specific group and month."""
-    engine = get_engine()
-    query = text("""
-        SELECT `Roommate Name`, `Paid` 
-        FROM payment_tracker 
-        WHERE `Billing Month` = :month AND user_id = :uid AND group_id = :gid
-    """)
-    
-    try:
-        df = pd.read_sql(query, engine, params={"month": month, "uid": user_id, "gid": group_id})
-        if not df.empty:
-            return df.set_index("Roommate Name")["Paid"].to_dict()
-        return {}
-    except Exception:
-        return {}
+def get_utility_split_status(user_id, month, group_id):
+    splits = db_session.query(UtilitySplit).filter_by(billing_month=month, user_id=user_id, group_id=group_id).all()
+    return {split.roommate_name: split.is_paid for split in splits}

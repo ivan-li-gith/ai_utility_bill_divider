@@ -1,89 +1,60 @@
-# src/app/database/expense_table.py
-from sqlalchemy import text
-from .database import get_engine
+from src.app.database.db import db_session
+from src.app.database.models import Expense, ExpenseSplit, GroupMember
 
-def save_new_expense(group_id, user_id, date, item_name, amount, payer_id, split_method):
-    """Saves a one-off expense AND automatically generates the debt splits for the group."""
-    engine = get_engine()
+def add_expense(group_id, user_id, date, item_name, amount, payer_id, split_method):
+    new_expense = Expense(
+        group_id=group_id, user_id=user_id, expense_date=date, 
+        description=item_name, amount=amount, payer_id=payer_id, split_method=split_method
+    )
+    db_session.add(new_expense)
+    db_session.flush() 
     
-    with engine.begin() as conn:
-        # 1. Save the main expense record
-        result = conn.execute(text("""
-            INSERT INTO receipt_expenses 
-            (group_id, user_id, expense_date, description, amount, payer_id, split_method)
-            VALUES (:gid, :uid, :date, :desc, :amt, :payer, :split)
-        """), {
-            "gid": group_id, "uid": user_id, "date": date, 
-            "desc": item_name, "amt": amount, "payer": payer_id, "split": split_method
-        })
+    members = db_session.query(GroupMember).filter_by(group_id=group_id).all()
+    if not members:
+        db_session.rollback()
+        return
         
-        expense_id = result.lastrowid
-        
-        # 2. Fetch the group members to calculate the split
-        members_query = text("SELECT member_name, user_id FROM group_members WHERE group_id = :gid")
-        members = conn.execute(members_query, {"gid": group_id}).fetchall()
-        
-        if not members:
-            return
+    num_people = len(members)
+    split_amount = round(amount / num_people, 2)
+    
+    for member in members:
+        is_payer = str(member.user_id) == str(payer_id)
+        if not is_payer:
+            new_split = ExpenseSplit(
+                expense_id=new_expense.expense_id, 
+                roommate_name=member.member_name, 
+                amount_owed=split_amount, 
+                is_paid=False
+            )
+            db_session.add(new_split)
             
-        # 3. Calculate the even split
-        num_people = len(members)
-        split_amount = round(amount / num_people, 2)
-        
-        # 4. Assign the debt to everyone except the person who paid
-        for member in members:
-            # Check if this member is the payer (by matching user_id)
-            is_payer = str(member.user_id) == str(payer_id)
-            
-            if not is_payer:
-                conn.execute(text("""
-                    INSERT INTO expense_splits (expense_id, roommate_name, amount_owed, is_paid)
-                    VALUES (:eid, :name, :owed, FALSE)
-                """), {
-                    "eid": expense_id,
-                    "name": member.member_name,
-                    "owed": split_amount
-                })
+    db_session.commit()
 
-def load_expense_history(group_id):
-    """Fetches all receipt/manual expenses for a specific group to display in the table."""
-    engine = get_engine()
-    query = text("""
-        SELECT e.expense_id, e.expense_date, e.description, e.amount, e.payer_id, e.split_method, g.group_name 
-        FROM receipt_expenses e
-        JOIN group_list g ON e.group_id = g.group_id
-        WHERE e.group_id = :gid
-        ORDER BY e.expense_date DESC
-    """)
-    with engine.connect() as conn:
-        result = conn.execute(query, {"gid": group_id}).fetchall()
-        return [dict(row._asdict()) for row in result]
+def get_expenses(group_id):
+    expenses = db_session.query(Expense).filter_by(group_id=group_id).order_by(Expense.expense_date.desc()).all()
+    return [{
+        "expense_id": e.expense_id, "expense_date": e.expense_date, 
+        "description": e.description, "amount": e.amount, 
+        "payer_id": e.payer_id, "split_method": e.split_method,
+        "group_name": e.group.group_name if e.group else ""
+    } for e in expenses]
         
 def delete_expense(expense_id):
-    """Removes a specific expense from the ledger."""
-    engine = get_engine()
-    with engine.begin() as conn:
-        conn.execute(text("DELETE FROM receipt_expenses WHERE expense_id = :eid"), {"eid": expense_id})
+    expense = db_session.query(Expense).filter_by(expense_id=expense_id).first()
+    if expense:
+        db_session.delete(expense) 
+        db_session.commit()
         
 def get_unpaid_expense_splits(group_id=None):
-    """Fetches all unpaid one-off expenses owed to the user."""
-    engine = get_engine()
+    query = db_session.query(ExpenseSplit).join(Expense).filter(ExpenseSplit.is_paid == False)
     
-    query_str = """
-        SELECT es.roommate_name, SUM(es.amount_owed) as total_owed
-        FROM expense_splits es
-        JOIN receipt_expenses re ON es.expense_id = re.expense_id
-        WHERE es.is_paid = FALSE
-    """
-    params = {}
-    
-    # Filter by a specific group if requested from the dashboard dropdown
     if group_id and group_id != 0:
-        query_str += " AND re.group_id = :gid"
-        params["gid"] = group_id
+        query = query.filter(Expense.group_id == group_id)
         
-    query_str += " GROUP BY es.roommate_name"
+    splits = query.all()
     
-    with engine.connect() as conn:
-        result = conn.execute(text(query_str), params).fetchall()
-        return {row.roommate_name: float(row.total_owed) for row in result}
+    totals = {}
+    for split in splits:
+        totals[split.roommate_name] = totals.get(split.roommate_name, 0.0) + float(split.amount_owed)
+        
+    return totals

@@ -1,27 +1,23 @@
-from sqlalchemy import text
-from .database import get_engine
+from src.app.database.db import db_session
+from src.app.database.models import Profile
 
 def get_profile(user_id):
-    engine = get_engine()
-    query = text("SELECT * FROM profiles WHERE user_id = :uid")
-    
-    with engine.connect() as conn:
-        result = conn.execute(query, {"uid": user_id}).fetchone()
-        return result._asdict() if result else None
+    profile = db_session.query(Profile).filter_by(user_id=user_id).first()
+    if profile:
+        return {"user_id": profile.user_id, "display_name": profile.display_name, "email": profile.email, "phone": profile.phone}
+    return None
     
 def save_profile(user_id, name, email, phone):
-    engine = get_engine()
-    with engine.begin() as conn:
-        conn.execute(text("""
-            INSERT INTO profiles (user_id, display_name, email, phone)
-            VALUES (:uid, :name, :email, :phone)
-            ON DUPLICATE KEY UPDATE display_name = :name, email = :email, phone = :phone
-        """), {"uid": user_id, "name": name, "email": email, "phone": phone})
+    profile = db_session.query(Profile).filter_by(user_id=user_id).first()
+    if profile:
+        profile.display_name = name
+        profile.email = email
+        profile.phone = phone
+    else:
+        profile = Profile(user_id=user_id, display_name=name, email=email, phone=phone)
+        db_session.add(profile)
+    db_session.commit()
         
 def get_user_by_email(email):
-    """Finds a user's ID by their email."""
-    engine = get_engine()
-    query = text("SELECT user_id FROM profiles WHERE email = :email")
-    with engine.connect() as conn:
-        result = conn.execute(query, {"email": email}).fetchone()
-        return result[0] if result else None
+    profile = db_session.query(Profile).filter_by(email=email).first()
+    return profile.user_id if profile else None

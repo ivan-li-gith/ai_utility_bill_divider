@@ -12,12 +12,13 @@ from src.app.routes.expenses import expenses
 from src.app.routes.activity import activity
 from src.app.routes.settings import settings
 from src.app.routes.landing import landing
-
+from config import Config
 
 def create_app():
+    Config.validate()
     load_dotenv()
     app = Flask(__name__)
-    app.secret_key = os.environ.get("APP_SECRET_KEY")
+    app.config.from_object(Config)
 
     with app.app_context():
         init_db()

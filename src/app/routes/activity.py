@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, session, redirect, url_for
 from src.app.database import get_user_groups, load_history, get_subscription, load_expense_history, get_group_members
-from src.app.routes.utilities import calculate_utilities, get_member_names
+from src.app.services.utility_service import calculate_utilities, get_member_names
 
 activity = Blueprint('activity', __name__)
 

@@ -5,8 +5,9 @@ import base64
 import json
 from openai import OpenAI
 from pydantic import BaseModel, Field
+from config import Config
 
-api_key = os.environ.get("OPENAI_API_KEY")
+openai.api_key = Config.OPENAI_API_KEY
 client = OpenAI(api_key=api_key)
 
 # model for the ai output
