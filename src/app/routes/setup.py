@@ -6,7 +6,7 @@ setup = Blueprint('setup', __name__)
 @setup.route('/setup')
 def setup_page():
     if "user_id" not in session:
-        return redirect(url_for('auth.login_page'))
+        return redirect(url_for('auth.login'))
         
     default_name = session.pop('oauth_name', '')
     default_email = session.pop('oauth_email', '')
